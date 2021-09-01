@@ -1,3 +1,0 @@
-"Hello World"
-I am Michael Sands.
-I am learning version control. 
