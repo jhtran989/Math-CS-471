@@ -1,0 +1,77 @@
+commit a528dc9784dd1ae578b8c79c5761e0fd21944063
+Author: Michael Sands <sandsm@unm.com>
+Date:   Wed Sep 1 11:34:32 2021 -0600
+
+    Commiting README files.
+
+commit 5c3caf9db092219fc2c6ad6eb0fba906059a5aa1
+Author: Michael Sands <sandsm@unm.com>
+Date:   Wed Sep 1 11:27:32 2021 -0600
+
+    renamed test.txt to hw1 dir.
+
+commit 906d1086998ebc8d8c24e5a9139392099913fcc2
+Author: Michael Sands <sandsm@unm.com>
+Date:   Wed Sep 1 11:25:21 2021 -0600
+
+    Added two more lines to test.txt
+
+commit 3f8b4d2c45f5216cd3b10da7b2e944c8cf747a0a
+Author: Michael Sands <sandsm@unm.com>
+Date:   Wed Sep 1 11:22:12 2021 -0600
+
+    My 1st commit of test.txt.
+
+commit d87687467b847afb519a9b4d1a74389ed2a99b2e
+Author: Michael Sands <sandsm@unm.com>
+Date:   Wed Sep 1 11:20:05 2021 -0600
+
+    Starting over
+
+commit a433e7392a1f48f77166e3173e53535d10fd2f3b
+Author: Michael Sands <sandsm@unm.com>
+Date:   Mon Aug 30 11:29:50 2021 -0600
+
+    Commiting second README.txt
+
+commit dfdfbceefbc776687ad32134580a61e153893526
+Author: Michael Sands <sandsm@unm.com>
+Date:   Mon Aug 30 11:27:40 2021 -0600
+
+    Commiting first README.txt file
+
+commit 7ef4066fb29f632bf2ade8a930884962234b3363
+Author: Michael Sands <sandsm@unm.com>
+Date:   Mon Aug 30 10:31:18 2021 -0600
+
+    new hw1 directory added
+
+commit 13b176d943f955b3b7822852848c80dac66ad9d9
+Author: Michael Sands <sandsm@unm.com>
+Date:   Mon Aug 30 10:29:05 2021 -0600
+
+    Added two more lines to test.txt
+
+commit 9d9e7bc936dcb978c7f11b520066e14580336b52
+Author: Michael Sands <sandsm@unm.com>
+Date:   Thu Aug 26 14:56:36 2021 -0600
+
+    My 2nd commit for practice.
+
+commit 4b81cd1e215ac2bf5a6b37f618b5627759f8bf13
+Author: Michael Sands <sandsm@unm.edu>
+Date:   Thu Aug 26 18:53:47 2021 +0000
+
+    My 1st commit of test.txt.
+
+commit fce9b91dd1b39f9b8b366c6d23543dbd5b8ace9c
+Author: Michael Sands <sandsm@unm.edu>
+Date:   Thu Aug 26 18:52:47 2021 +0000
+
+    Add new file
+
+commit 861bc84d6dff0598f4b84778cc806de86b542705
+Author: Michael Sands <sandsm@unm.edu>
+Date:   Tue Aug 24 20:54:03 2021 +0000
+
+    Initial commit

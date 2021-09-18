@@ -1,3 +1,0 @@
-Hello World 
-I am Michael Sands (and John Tran)
-I am learning version control. 

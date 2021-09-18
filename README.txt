@@ -1,6 +1,6 @@
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 README file for Math 471 Repository for Michael Sands and John Tran, Fall 2021
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-- The homework report for homework 1 is in the hw1 directory
-
+- The homework report for homework 1 is in the homeworks/hw1 directory
+- The homework report for homework 2 is in the homeworks/hw2 directory
 
