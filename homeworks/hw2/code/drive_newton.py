@@ -34,8 +34,8 @@ for fcn in fcn_list:
     flat = tests.reshape((lin.size,1))
     lin = np.column_stack((flat,lin))
     quad = np.column_stack((flat, quad))
-    print(lin)
-    print(quad)
+    #print(lin)
+    #print(quad)
     print()
     if fcn == f1:
         str_lin = 'x_2' + '_lin_test.txt'
