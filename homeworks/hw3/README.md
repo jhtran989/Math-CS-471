@@ -1,7 +1,7 @@
-#README
-##Math/CS 471
-###Homework 3
-####Michael Sands, John Tran
+# README
+## Math/CS 471
+### Homework 3
+#### Michael Sands, John Tran
 
 - The homework report is in the directory
 `hw2/report` and is called `homework2.pdf`.
