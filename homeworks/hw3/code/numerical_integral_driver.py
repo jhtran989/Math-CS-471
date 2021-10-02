@@ -8,6 +8,11 @@ from gauss_quadrature_rule import gauss_quadrature_error
 
 
 def e_cos_function(x, k):
+    """
+    Acts like a lambda function that evaluates the function exp(cos(k * x))
+    at the given parameters x and k (where k should be either pi or pi^2 for
+    our example)
+    """
     # maybe set k explicitly
 
     return exp(cos(k * x))
@@ -21,15 +26,23 @@ def e_cos_function(x, k):
 
 
 if __name__ == '__main__':
+    # to change the code below, there are two separate things that could be
+    # outputted -- one figure for the trapezoid rule (both k values) and
+    # another for gauss quadrature (also both k values)
+    # the values for n_bound and tol are set to variables first before
+    # passing them to the respective functions (see *_rule.py for each of the
+    # two numerical methods)
+    # currently, the gauss quadrature figure will be saved (can be changed so
+    # that both are shown on the same figure -- uncomment the trapezoid parts
+    # below)
+
     # Exact integral:
     # 2.532131755504017 (k = pi)
     # 2.452283895096694 (k = pi^2)
 
-    # FIXME
-    # print(f"{exp(cos([1, 2, 3]))}")
-
     interval = [-1, 1]
 
+    # both values of k are evaluated (stored as a list)
     k = [pi, pi ** 2]
 
     n_bound = 250
@@ -120,22 +133,3 @@ if __name__ == '__main__':
     plt.savefig("numerical_integration_error_gaus.png")
 
     plt.show()
-
-
-
-
-
-    # while delta_integral > tol:
-    #     for k_value in k:
-    #         if k == pi:
-    #             print(f"Approximation of integral [{interval[0]}, "
-    #                   f"{interval[1]}] of e^cos(pi * x): "
-    #                   f"{trapezoid(e_cos_function, k, interval, n)}\n")
-    #         elif k == (pi ** 2):
-    #             print(f"Approximation of integral [{interval[0]}, "
-    #                   f"{interval[1]}] of e^cos(pi^2 * x): "
-    #                   f"{trapezoid(e_cos_function, k, interval, n)}\n")
-
-
-
-

@@ -7,7 +7,12 @@ import numpy as np
 # nodes, then multiply by weights, and finally sum
 
 def gauss_quadrature(function, k, n):
-    # x_values, h = np.linspace(interval[0], interval[1], n + 1, retstep=True)
+    """
+    Calculates the approximate integral using Gauss quadrature for the given
+    function, k, and n values (uses the nodes and weights from the
+    lglnodes.py file and adds the product of the weights/nodes together)
+    """
+
     (nodes, weights) = lglnodes(n)
 
     approximate_integral = np.multiply(weights, function(nodes, k))
@@ -17,27 +22,24 @@ def gauss_quadrature(function, k, n):
 
 
 def gauss_quadrature_error(function, k, tol=None, n_bound=100):
-    # Exact integral:
-    # 2.532131755504017 (k = pi)
-    # 2.452283895096694 (k = pi^2)
+    """
+    Calculates the error for Gauss quadrature using the above function. Two
+    key parameters were added to provide a choice when the calculation of the
+    relative absolute error should continue (default tol of None where if a
+    tolerance is given, it is used first before n_bound)
 
-    # FIXME
-    # print(f"spliced interval: {interval[1:-1]}\n")
-    # print(f"{exp(interval)}")
-
+    tol: the tolerance value to check for each relative absolute integral
+    approximation
+    n_bound: the value of n to calculate the error up to, regardless of the
+    error
+    """
     n = 2
     n_values = []
-
-    # tol = 1e-7
 
     integral_values = []
     delta_integral_values = []
 
-    # previous_integral = 0
-    # current_integral = 0
-
     delta_integral = 1  # some default value for delta
-    # current_k = k[0]
     index = 0
 
     if tol is None:

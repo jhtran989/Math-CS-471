@@ -2,6 +2,12 @@ import numpy as np
 
 
 def trapezoid(function, k, interval, n):
+    """
+    Calculates the approximate integral using the trapezoid for the given
+    function, k, interval, and n values (uses the formula to partition the
+    interval given n subintervals)
+    """
+
     x_values, h = np.linspace(interval[0], interval[1], n + 1, retstep=True)
 
     x_0 = x_values[0]
@@ -9,32 +15,27 @@ def trapezoid(function, k, interval, n):
     approximate_integral = h * (((function(x_0, k) + function(x_n, k)) / 2) +
                                 sum(function(x_values[1:-1], k)))
 
-    # approximate_integral = h * (((function(x_0, k) + function(x_n, k)) / 2) +
-    #                             sum(function(x_values[i], k)
-    #                                 for i in range(1, len(x_values - 1))))
-
     return approximate_integral
 
 
 def trapezoid_error(function, k, interval, tol=None, n_bound=100):
-    # Exact integral:
-    # 2.532131755504017 (k = pi)
-    # 2.452283895096694 (k = pi^2)
+    """
+    Calculates the error for the trapezoid rule using the above function. Two
+    key parameters were added to provide a choice when the calculation of the
+    relative absolute error should continue (default tol of None where if a
+    tolerance is given, it is used first before n_bound)
 
-    # FIXME
-    # print(f"spliced interval: {interval[1:-1]}\n")
-    # print(f"{exp(interval)}")
+    tol: the tolerance value to check for each relative absolute integral
+    approximation
+    n_bound: the value of n to calculate the error up to, regardless of the
+    error
+    """
 
     n = 2
     n_values = []
 
-    # tol = 1e-7
-
     integral_values = []
     delta_integral_values = []
-
-    # previous_integral = 0
-    # current_integral = 0
 
     delta_integral = 1  # some default value for delta
     # current_k = k[0]
