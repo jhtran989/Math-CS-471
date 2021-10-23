@@ -6,24 +6,25 @@ from matplotlib import pyplot
 from poisson import poisson
 from check_matvec import check_matvec
 
+
 def L2norm(e, h):
     '''
     Take L2-norm of e
     '''
     # ensure e has a compatible shape for taking a dot-product
-    e = e.reshape(-1,) 
+    e = e.reshape(-1, )
 
     # Task:
     # Return the L2-norm, i.e., the square roof of the integral of e^2
     # Assume a uniform grid in x and y, and apply the midpoint rule.
     # Assume that each grid point represents the midpoint of an equally sized region
-    return  linalg.norm(e)*(1/h**2) ### Check
+    return linalg.norm(e) * (1 / h ** 2)  ### Check
 
 
 def compute_fd(n, nt, k, f, fpp_num):
     '''
-    Compute the numeric second derivative of the function 'f' with a 
-    threaded matrix-vector multiply.  
+    Compute the numeric second derivative of the function 'f' with a
+    threaded matrix-vector multiply.
 
     Input
     -----
@@ -43,17 +44,17 @@ def compute_fd(n, nt, k, f, fpp_num):
     Notes
     -----
     We do a 1D domain decomposition.  Each thread 'owns' the k*(n/nt) : (k+1)*(n/nt) rows
-    of the domain.  
-    
-    For example, 
-    Let the global points in the x-dimension be [0, 0.33, 0.66, 1.0] 
-    Let the global points in the y-dimension be [0, 0.33, 0.66, 1.0] 
+    of the domain.
+
+    For example,
+    Let the global points in the x-dimension be [0, 0.33, 0.66, 1.0]
+    Let the global points in the y-dimension be [0, 0.33, 0.66, 1.0]
     Let the number of threads be two (nt=2)
-    
+
     Then for the k=0 case (for the 0th thread), the domain rows  'owned' are
     y = 0,    and x = [0, 0.33, 0.66, 1.0]
     y = 0.33, and x = [0, 0.33, 0.66, 1.0]
-    
+
     Then for the k = 1, case, the domain rows 'owned' are
     y = 0.66, and x = [0, 0.33, 0.66, 1.0]
     y = 1.0,  and x = [0, 0.33, 0.66, 1.0]
@@ -61,22 +62,25 @@ def compute_fd(n, nt, k, f, fpp_num):
     We assume that n/nt divides evenly.
 
     '''
-    
-    # Task: 
+
+    # Task:
     # Compute start, end
     #
     # These indices allow you to index into arrays and grab only this thread's
     # portion.  For example, using the y = [0, 0.33, 0.66, 1.0] example above,
-    # and considering thread 0, will yield start = 0 and end = 2, so that 
+    # and considering thread 0, will yield start = 0 and end = 2, so that
     # y[start:end] --> [0, 0.33]
-    start = int(k*(n/nt)) #<first domain row owned by thread k, cast as integer>
-    end = int((k+1)*(n/nt)) # <first domain row owned by thread k+1, cast as integer>
-
+    start = int(k * (n / nt))
+    #  <first domain row owned by thread k,
+    # cast as integer>
+    end = int((k + 1) * (
+                n / nt))  #  <first domain row owned by thread k+1, cast as
+    # integer>
 
     # Task:
     # Compute start_halo, and end_halo
     #
-    # These values are the same as start and end, only they are expanded to 
+    # These values are the same as start and end, only they are expanded to
     # include the halo region.
     #
     # Halo regions essentially expand a thread's local domain to include enough
@@ -86,236 +90,267 @@ def compute_fd(n, nt, k, f, fpp_num):
     #     so that y[start_halo : end_halo] --> [0, 0.33, 0.66]
     #   - Including the y=0.33 row of points for the k=1 case
     #     so that y[start_halo : end_halo] --> [0.33, 0.66, 1.0]
-    #   - Note that for larger numbers of threads, some threads 
+    #   - Note that for larger numbers of threads, some threads
     #     will have halo regions including domain rows above and below.
     if k != 0:
         start_halo = start - 1
     else:
-        start_halo = start   #check
-    #start_halo = <start - 1, unless k == 0>
-    if k != (nt-1):
+        start_halo = start  # check
+    # start_halo = <start - 1, unless k == 0>
+    if k != (nt - 1):
         end_halo = end + 1
     else:
-        end_halo = end  #check
-    #end_halo = <end + 1, unless k == (nt-1)>
+        end_halo = end  # check
+    # end_halo = <end + 1, unless k == (nt-1)>
 
-    
     # Construct local CSR matrix.  Here, you're given that function in poisson.py
     # This matrix will contain the extra halo domain rows
     A = poisson((end_halo - start_halo, n), format='csr')
-    h = 1./(n-1)
-    A *= 1/h**2
+    h = 1. / (n - 1)
+    A *= 1 / h ** 2
 
     # Task:
     # Inspect a row or two of A, and verify that it's the correct 5 point stencil
     # You can print a few rows of A, with print(A[k,:])
-    #< add statement to inspect a row or two of A >
+    # < add statement to inspect a row or two of A >
 
-    print(A[k,:]) # check
+    print(A[k, :])  # check
 
     # Task:
     # Construct a grid of evenly spaced points over this thread's halo region
     #
     # x_pts contains all of the points in the x-direction in this thread's halo region
-    x_pts = linspace(0,1,n)
+    x_pts = linspace(start_halo * h, end_halo * h, n)
     #
     # y_pts contains all of the points in the y-direction for this thread's halo region
     # For the above example and thread 1 (k=1), this is y_pts = [0.33, 0.66, 1.0]
-    y_pts = linspace(start_halo*h,  end_halo*h) #Check
-    
+    y_pts = linspace(start_halo * h, end_halo * h, n)  # Check
+
     # Task:
-    # There is no coding to do here, but examime how meshgrid works and 
+    # There is no coding to do here, but examime how meshgrid works and
     # understand how it gives you the correct uniform grid.
-    X,Y = meshgrid(x_pts, y_pts)
-    X = X.reshape(-1,)
-    Y = Y.reshape(-1,)
+    X, Y = meshgrid(x_pts, y_pts)
+    X = X.reshape(-1, )
+    Y = Y.reshape(-1, )
 
     # I have had many headaches plotting higher dimensional mesh grids
 
     # Task:
     # Compute local portion of f by using X and Y
-    #x_region = X[start_halo:end_halo]
-    #y_region = Y[start_halo:end_halo]
-    #print("x_region = ", x_region.size)
-    #print("y_region =", y_region.size)
-    f_vals = fcn(X, Y) # < f evaluated at X and Y > # Check
-    
+    # x_region = X[start_halo:end_halo]
+    # y_region = Y[start_halo:end_halo]
+    # print("x_region = ", x_region.size)
+    # print("y_region =", y_region.size)
+    f_vals = f(X, Y)  # < f evaluated at X and Y > # Check
+
     # Task:
     # Compute the correct range of output values for this thread
-    #print("A = ", A.size)
-    #print("f_vals", f_vals.size)
-    #A= A.todense()
-    output = A*f_vals
+    # print("A = ", A.size)
+    # print("f_vals", f_vals.size)
+    # A= A.todense()
+    output = A * f_vals
+    # print(f"output: {output}")
+    # print(f"output shape: {output.shape}")
     if k != 0 and k != nt:
-        output = output[start:end] #< output array should be truncated to exclude values in the halo region >
+        output = output[
+                 start:end]  # < output array should be truncated to exclude values in the halo region >
     elif k == 0:
         output = output[:end]
     elif k == nt:
         output = output[start:]
-        #< you will need special cases to account for the first and last threads >
-    
+        # < you will need special cases to account for the first and last threads >
+
+    print(f"start: {start}")
+    print(f"end: {end}")
+    print(f"output: {output}")
+    print(f"output shape: {output.shape}")
+
     # Task:
     # Set the output array
-    fpp_num[start:end] = output  # Check
+    # fpp_num = array((end - start, ))
+    # print(f"shape fpp_num: {fpp_num.shape}")
+    fpp_num[start:end] = output[start:end]  # Check
 
 
-def fcn(x,y):
+def fcn(x, y):
     '''
     This is the function we are studying
     '''
-    return cos((x+1)**(1./3.) + (y+1)**(1./3.)) + sin((x+1)**(1./3.) + (y+1)**(1./3.))
+    return cos((x + 1) ** (1. / 3.) + (y + 1) ** (1. / 3.)) + sin(
+        (x + 1) ** (1. / 3.) + (y + 1) ** (1. / 3.))
 
-def fcnpp(x,y):
+
+def fcnpp(x, y):
     '''
     This is the second derivative of the function we are studying
     '''
     # Task:
     # Fill this function in with the correct second derivative.  You end up with terms like
     # -cos((x+1)**(1./3.) + (y+1)**(1./3.))*(1./9.)*(x+1)**(-4./3)
-    inner = (x+1)**(1./3.) + (y+1)**(1./3.)
+    inner = (x + 1) ** (1. / 3.) + (y + 1) ** (1. / 3.)
     # wrt x:
-    first_portion_x = (2*sin(inner) - ((x+1)**(1./3.))*cos(inner))/(9*((x+1)**(5/3)))
-    second_portion_x = -((x+1)**(1/3)*sin(inner) + 2*cos(inner))/(9*(x+1)**(5/3))
+    first_portion_x = (2 * sin(inner) - ((x + 1) ** (1. / 3.)) * cos(inner)) / (
+                9 * ((x + 1) ** (5 / 3)))
+    second_portion_x = -((x + 1) ** (1 / 3) * sin(inner) + 2 * cos(inner)) / (
+                9 * (x + 1) ** (5 / 3))
     # wrt y
-    first_portion_y = (2*sin(inner) - ((y+1)**(1/3))*cos(inner))/(9*(y+1)**(5/3))
-    second_portion_y = -((y+1)**(1/3)*sin(inner) + 2*cos(inner))/(9*(y+1)**(5/3))
+    first_portion_y = (2 * sin(inner) - ((y + 1) ** (1 / 3)) * cos(inner)) / (
+                9 * (y + 1) ** (5 / 3))
+    second_portion_y = -((y + 1) ** (1 / 3) * sin(inner) + 2 * cos(inner)) / (
+                9 * (y + 1) ** (5 / 3))
     return first_portion_x + second_portion_x + first_portion_y + second_portion_y
 
+if __name__ == "__main__":
+    ##
+    # Here are three problem size options for running.  The instructor has chosen these
+    # for you.
+    option = 3
+    if option == 1:
+        # Choose this if doing a final run on CARC for your strong scaling study
+        NN = array([840 * 6])
+        num_threads = [1, 2, 3, 4, 5, 6, 7, 8]
+    elif option == 2:
+        # Choose this for printing convergence plots on your laptop/lab machine,
+        # and for initial runs on CARC.
+        # You may want to start with just num_threads=[1] and debug the serial case first.
+        NN = 210 * arange(1, 6)
+        num_threads = [1]  # eventually include 2, 3
+    elif option == 3:
+        # Choose this for code development and debugging on your laptop/lab machine
+        # You may want to start with just num_threads=[1] and debug the serial case first.
+        NN = array([6])
+        num_threads = [1]  # eventually include 2,3
+    else:
+        print("Incorrect Option!")
 
-##
-# Here are three problem size options for running.  The instructor has chosen these
-# for you.
-option = 3
-if option == 1:
-    # Choose this if doing a final run on CARC for your strong scaling study
-    NN = array([840*6])
-    num_threads = [1,2,3,4,5,6,7,8]
-elif option == 2:
-    # Choose this for printing convergence plots on your laptop/lab machine,
-    # and for initial runs on CARC.  
-    # You may want to start with just num_threads=[1] and debug the serial case first.
-    NN = 210*arange(1,6)
-    num_threads = [1] #eventually include 2, 3
-elif option == 3:
-    # Choose this for code development and debugging on your laptop/lab machine
-    # You may want to start with just num_threads=[1] and debug the serial case first.
-    NN = array([6])
-    num_threads = [1] #eventually include 2,3
-else:
-    print("Incorrect Option!")
+    ##
+    # Begin main computation loop
+    ##
 
-##
-# Begin main computation loop
-##
+    # Task:
+    # Initialize your data arrays
+    num_threads_length = len(num_threads)
+    NN_length = len(NN)  # zeros(int,int)
+    error = zeros((num_threads_length,
+                   NN_length))  # <array of zeros  (size of num_threads, size of NN) >
+    timings = zeros((num_threads_length,
+                     NN_length))  # <array of zeros (size of num_threads, size of NN) >
 
-# Task:
-# Initialize your data arrays
-num_threads_length = len(num_threads)
-NN_length = len(NN) # zeros(int,int)
-error = zeros((num_threads_length, NN_length)) #<array of zeros  (size of num_threads, size of NN) >
-timings = zeros((num_threads_length, NN_length)) #<array of zeros (size of num_threads, size of NN) >
+    # personal addition
+    #fpp_num = array(())
 
-# Loop over various numbers of threads
-for i,nt in enumerate(num_threads):
-    # Loop over various problem sizes 
-    for j,n in enumerate(NN):
-        
-        # Task:
-        # Initialize output array
-        fpp_numeric = zeros((1, NN.size)) #<array of zeros of appropriate size>
-        
-        # Task:
-        # Choose the number of timings to do for each run 
-        ntimings = 5 # <insert> ## Check but this seems decent
+    # Loop over various numbers of threads
+    for i, nt in enumerate(num_threads):
+        # Loop over various problem sizes
+        for j, n in enumerate(NN):
 
-        # Carry out timing experiment 
-        min_time = 10000
-        for m in range(ntimings):
-
-            # This loop will set up each Thread object to compute fpp numerically in the 
-            # interior of each thread's domain.  That is, after this loop 
-            # t_list = [ Thread_object_1, Thread_object_2, ...]
-            # where each Thread_object will be ready to compute one thread's contribution 
-            # to fpp_numeric.  The threads are launched below.
-            t_list = []
-            for k in range(nt):
-                # Task:
-                # Finish this call to Thread(), passing in the correct target and arguments
-                t_list.append(Thread(target=compute_fd, args=(n, nt, k, fcn, fcnpp) ))#t_list.append(Thread(target=<insert>, args=<insert tuple of arguments> ))
-
-            start = time.time()
             # Task:
-            # Loop over each thread object to launch them.  Then separately loop over each 
-            # thread object to join the threads.
-            for t in t_list:
-                t.start()
-            for t in t_list:
-                t.join()
-            #< loop over all the threads in t_list and start them >
-            #< loop over all the threads in t_list and join them >
-            end = time.time()
-            min_time = min(end-start, min_time)
+            # Initialize output array
+            fpp_numeric = zeros(
+                (n ** 2, ))  # <array of zeros of appropriate size>
+
+            # Task:
+            # Choose the number of timings to do for each run
+            ntimings = 1  # <insert> ## Check but this seems decent
+
+            # Carry out timing experiment
+            min_time = 10000
+            for m in range(ntimings):
+
+                # This loop will set up each Thread object to compute fpp numerically in the
+                # interior of each thread's domain.  That is, after this loop
+                # t_list = [ Thread_object_1, Thread_object_2, ...]
+                # where each Thread_object will be ready to compute one thread's contribution
+                # to fpp_numeric.  The threads are launched below.
+                t_list = []
+                for k in range(nt):
+                    # Task:
+                    # Finish this call to Thread(), passing in the correct target and arguments
+                    # args n, nt, k, f, fpp_num
+                    t_list.append(Thread(target=compute_fd, args=(n, nt, k, fcn,
+                                                                  fpp_numeric)))
+                    # t_list.append(Thread(target=<insert>, args=<insert tuple of arguments> ))
+
+                start = time.time()
+                # Task:
+                # Loop over each thread object to launch them.  Then separately loop over each
+                # thread object to join the threads.
+                for t in t_list:
+                    t.start()
+                for t in t_list:
+                    t.join()
+                # < loop over all the threads in t_list and start them >
+                # < loop over all the threads in t_list and join them >
+                end = time.time()
+                min_time = min(end - start, min_time)
+            ##
+            # End loop over timings
+            print(" ")
+
+            ##
+            # Use testing-harness to make sure your threaded matvec works
+            # This call should print zero (or a numerically zero value)
+            if option == 2 or option == 3:
+                check_matvec(fpp_numeric, n, fcn)
+
+            # Construct grid of evenly spaced points for a reference evaluation of
+            # the double derivative
+            h = 1. / (n - 1)
+            pts = linspace(0, 1, n)
+            X, Y = meshgrid(pts, pts)
+            X = X.reshape(-1, )
+            Y = Y.reshape(-1, )
+            fpp = fcnpp(X, Y)
+
+            # Account for domain boundaries.
+            #
+            # The boundary_points array is a Boolean array, that acts like a
+            # mask on an array.  For example if boundary_points is True at 10
+            # points and False at 90 points, then x[boundary_points] will be a
+            # length 10 array at those 10 True locations
+            boundary_points = (Y == 0)
+            fpp_numeric[boundary_points] += (1 / h ** 2) \
+                                            * fcn(X[boundary_points],
+                                                  Y[boundary_points] - h)
+
+            # Task:
+            # Account for the domain boundaries at Y == 1, X == 0, X == 1
+            boundary_points = (Y == 1)
+            fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points],
+                                                               Y[
+                                                                   boundary_points] - h)
+
+            boundary_points = (X == 0)
+            fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points],
+                                                               Y[
+                                                                   boundary_points] - h)
+
+            boundary_points = (X == 1)
+            fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points],
+                                                               Y[
+                                                                   boundary_points] - h)
+
+            # < include code for these additional boundaries>
+
+            # Task:
+            # Compute error
+            e = abs(fpp - fpp_numeric)
+            error[i, j] = L2norm(e, h)
+            timings[i, j] = min_time
+            print(min_time)
         ##
-        # End loop over timings
+        # End Loop over various grid-sizes
         print(" ")
 
-        ##
-        # Use testing-harness to make sure your threaded matvec works
-        # This call should print zero (or a numerically zero value)
-        if option == 2 or option == 3:
-            check_matvec(fpp_numeric, n, fcn)
-        
-        # Construct grid of evenly spaced points for a reference evaluation of
-        # the double derivative
-        h = 1./(n-1)
-        pts = linspace(0,1,n)
-        X,Y = meshgrid(pts, pts)
-        X = X.reshape(-1,)
-        Y = Y.reshape(-1,) 
-        fpp = fcnpp(X,Y)
-
-        # Account for domain boundaries.  
-        #
-        # The boundary_points array is a Boolean array, that acts like a
-        # mask on an array.  For example if boundary_points is True at 10
-        # points and False at 90 points, then x[boundary_points] will be a
-        # length 10 array at those 10 True locations
-        boundary_points = (Y == 0)
-        fpp_numeric[boundary_points] += (1/h**2)*fcn(X[boundary_points], Y[boundary_points]-h)
-        
         # Task:
-        # Account for the domain boundaries at Y == 1, X == 0, X == 1
-        boundary_points = (Y == 1)
-        fpp_numeric[boundary_points] += (1/h**2)*fcn(X[boundary_points], Y[boundary_points]-h)
+        # Generate and save plot showing convergence for this thread number
+        # --> Comment out plotting before running on CARC
+        # pyplot.loglog(NN, <array slice of error values>)
+        # pyplot.loglog(NN, <reference quadratic convergence data>)
+        # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
+        # pyplot.savefig('error'+str(i)+'.png', dpi=500, format='png', bbox_inches='tight', pad_inches=0.0,)
 
-        boundary_points = (X == 0)
-        fpp_numeric[boundary_points] += (1/h**2)*fcn(X[boundary_points], Y[boundary_points]-h)
-
-        boundary_points = (X == 1)
-        fpp_numeric[boundary_points] += (1/h**2)*fcn(X[boundary_points], Y[boundary_points]-h)
-
-        #< include code for these additional boundaries>
-        
-        # Task:
-        # Compute error
-        e = abs(fpp - fpp_numeric)
-        error[i,j] = L2norm(e, h)
-        timings[i,j] = min_time
-        print(min_time)
-    ##
-    # End Loop over various grid-sizes
-    print(" ")
-    
-    # Task:
-    # Generate and save plot showing convergence for this thread number
-    # --> Comment out plotting before running on CARC
-    #pyplot.loglog(NN, <array slice of error values>)
-    #pyplot.loglog(NN, <reference quadratic convergence data>)
-    #<insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
-    #pyplot.savefig('error'+str(i)+'.png', dpi=500, format='png', bbox_inches='tight', pad_inches=0.0,)
-
-
-# Save timings for future use
-#savetxt('timings.txt', timings)
+    # Save timings for future use
+    # savetxt('timings.txt', timings)
 
 
