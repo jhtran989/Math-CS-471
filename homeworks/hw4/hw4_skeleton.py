@@ -5,6 +5,7 @@ from threading import Thread
 from matplotlib import pyplot
 from poisson import poisson
 from check_matvec import check_matvec
+import sys
 
 
 def L2norm(e, h):
@@ -18,7 +19,7 @@ def L2norm(e, h):
     # Return the L2-norm, i.e., the square roof of the integral of e^2
     # Assume a uniform grid in x and y, and apply the midpoint rule.
     # Assume that each grid point represents the midpoint of an equally sized region
-    return linalg.norm(e) * (1 / h ** 2)  ### Check
+    return linalg.norm(e) * (h)  ### good
 
 
 def compute_fd(n, nt, k, f, fpp_num):
@@ -73,9 +74,11 @@ def compute_fd(n, nt, k, f, fpp_num):
     start = int(k * (n / nt))
     #  <first domain row owned by thread k,
     # cast as integer>
-    end = int((k + 1) * (
-                n / nt))  #  <first domain row owned by thread k+1, cast as
+    end = int((k + 1) * (n / nt))  #  <first domain row owned by thread k+1, cast as
     # integer>
+    # good
+    #sys.stderr.write(f"start: {start}")
+    #sys.stderr.write(f"end: {end}")
 
     # Task:
     # Compute start_halo, and end_halo
@@ -95,12 +98,13 @@ def compute_fd(n, nt, k, f, fpp_num):
     if k != 0:
         start_halo = start - 1
     else:
-        start_halo = start  # check
+        start_halo = start
     # start_halo = <start - 1, unless k == 0>
     if k != (nt - 1):
         end_halo = end + 1
     else:
-        end_halo = end  # check
+        end_halo = end
+    # good
     # end_halo = <end + 1, unless k == (nt-1)>
 
     # Construct local CSR matrix.  Here, you're given that function in poisson.py
@@ -114,18 +118,19 @@ def compute_fd(n, nt, k, f, fpp_num):
     # You can print a few rows of A, with print(A[k,:])
     # < add statement to inspect a row or two of A >
 
-    print(A[k, :])  # check
+    #sys.stderr.write(A[k, :])  # check
 
     # Task:
     # Construct a grid of evenly spaced points over this thread's halo region
     #
     # x_pts contains all of the points in the x-direction in this thread's halo region
-    x_pts = linspace(start_halo * h, end_halo * h, n)
+    x_pts = linspace(0, 1, n)
     #
     # y_pts contains all of the points in the y-direction for this thread's halo region
     # For the above example and thread 1 (k=1), this is y_pts = [0.33, 0.66, 1.0]
-    y_pts = linspace(start_halo * h, end_halo * h, n)  # Check
-
+    y_pts = linspace(start_halo * h, end_halo * h, (end_halo-start_halo))  # good
+    #sys.stderr.write(f"x_pts: {x_pts.shape}\n")
+    #sys.stderr.write(f"y_pts: {y_pts.shape}\n")
     # Task:
     # There is no coding to do here, but examime how meshgrid works and
     # understand how it gives you the correct uniform grid.
@@ -141,35 +146,59 @@ def compute_fd(n, nt, k, f, fpp_num):
     # y_region = Y[start_halo:end_halo]
     # print("x_region = ", x_region.size)
     # print("y_region =", y_region.size)
-    f_vals = f(X, Y)  # < f evaluated at X and Y > # Check
+    #sys.stderr.write(f"X: {X.shape}\n")
+    #sys.stderr.write(f"Y: {Y.shape}\n")
+    f_vals = f(X, Y)  # < f evaluated at X and Y > # good
 
     # Task:
     # Compute the correct range of output values for this thread
     # print("A = ", A.size)
     # print("f_vals", f_vals.size)
     # A= A.todense()
+    #sys.stderr.write(f"A: {A.todense()}\n")
+    #sys.stderr.write(f"f_vals: {f_vals.shape}\n")
+
     output = A * f_vals
+    #print("output_init", output)
     # print(f"output: {output}")
     # print(f"output shape: {output.shape}")
-    if k != 0 and k != nt:
-        output = output[
-                 start:end]  # < output array should be truncated to exclude values in the halo region >
-    elif k == 0:
-        output = output[:end]
-    elif k == nt:
-        output = output[start:]
-        # < you will need special cases to account for the first and last threads >
+    #start_output = int(k * (n**2 / nt))
+    #end_output = int((k + 1) * (n**2 / nt))
+    #sys.stderr.write(f"start_output: {start_output}\n")
+    #sys.stderr.write(f"end_output: {end_output}\n")
+    #sys.stderr.write(f"k: {k}\n")
+    if k != 0 and k != (nt-1):
+        output = output[n:-n]  # good
+    # < output array should be truncated to exclude values in the halo region >
+    if k == 0 and nt == 1:
+        output = output    # good
+    if k == 0 and nt > 1:
+        output = output[:-n]    # good
+    if k == (nt-1) and k != 0: #check if nt=1
+        output = output[n:]   # good
+    # < you will need special cases to account for the first and last threads >
 
-    print(f"start: {start}")
-    print(f"end: {end}")
-    print(f"output: {output}")
-    print(f"output shape: {output.shape}")
+    #sys.stderr.write(f"start: {start}\n")
+    #sys.stderr.write(f"end: {end}\n")
+    #sys.stderr.write(f"output: {output}\n")
+    #sys.stderr.write(f"output shape: {output.shape}\n")
 
     # Task:
     # Set the output array
     # fpp_num = array((end - start, ))
     # print(f"shape fpp_num: {fpp_num.shape}")
-    fpp_num[start:end] = output[start:end]  # Check
+    #sys.stderr.write(f"fpp_num: {fpp_num.shape}\n")
+    #sys.stderr.write(f"output: {output}\n")
+    #sys.stderr.write(f"output: {output.shape}\n")
+    #sys.stderr.write(f"fpp_num: {fpp_num}\n")
+    #sys.stderr.write(f"fpp_num: {fpp_num.shape}\n")
+    #sys.stderr.write(f"start: {start}\n")
+    #sys.stderr.write(f"end: {end}\n")
+    #sys.stderr.write(f"n: {n}\n")
+    #sys.stderr.write(f"start*n: {start*n}\n")
+    #sys.stderr.write(f"end*n: {end*n}\n")
+    fpp_num[(start*n):(end*n)] = output  # Check
+
 
 
 def fcn(x, y):
@@ -221,7 +250,7 @@ if __name__ == "__main__":
         NN = array([6])
         num_threads = [1]  # eventually include 2,3
     else:
-        print("Incorrect Option!")
+        sys.stderr.write("Incorrect Option!")
 
     ##
     # Begin main computation loop
@@ -267,8 +296,7 @@ if __name__ == "__main__":
                     # Task:
                     # Finish this call to Thread(), passing in the correct target and arguments
                     # args n, nt, k, f, fpp_num
-                    t_list.append(Thread(target=compute_fd, args=(n, nt, k, fcn,
-                                                                  fpp_numeric)))
+                    t_list.append(Thread(target=compute_fd, args=(n, nt, k, fcn, fpp_numeric)))
                     # t_list.append(Thread(target=<insert>, args=<insert tuple of arguments> ))
 
                 start = time.time()
@@ -285,7 +313,7 @@ if __name__ == "__main__":
                 min_time = min(end - start, min_time)
             ##
             # End loop over timings
-            print(" ")
+            sys.stderr.write(" ")
 
             ##
             # Use testing-harness to make sure your threaded matvec works
@@ -308,27 +336,19 @@ if __name__ == "__main__":
             # mask on an array.  For example if boundary_points is True at 10
             # points and False at 90 points, then x[boundary_points] will be a
             # length 10 array at those 10 True locations
-            boundary_points = (Y == 0)
-            fpp_numeric[boundary_points] += (1 / h ** 2) \
-                                            * fcn(X[boundary_points],
-                                                  Y[boundary_points] - h)
+            #boundary_points = (Y == 0)
+            #fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points], Y[boundary_points] - h)
 
             # Task:
             # Account for the domain boundaries at Y == 1, X == 0, X == 1
-            boundary_points = (Y == 1)
-            fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points],
-                                                               Y[
-                                                                   boundary_points] - h)
+            #boundary_points = (Y == 1)
+            #fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points], Y[boundary_points] - h)
 
-            boundary_points = (X == 0)
-            fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points],
-                                                               Y[
-                                                                   boundary_points] - h)
+            #boundary_points = (X == 0)
+            #fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points], Y[boundary_points] - h)
 
-            boundary_points = (X == 1)
-            fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points],
-                                                               Y[
-                                                                   boundary_points] - h)
+            #boundary_points = (X == 1)
+            #fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points], Y[boundary_points] - h)
 
             # < include code for these additional boundaries>
 
@@ -337,10 +357,10 @@ if __name__ == "__main__":
             e = abs(fpp - fpp_numeric)
             error[i, j] = L2norm(e, h)
             timings[i, j] = min_time
-            print(min_time)
+            sys.stderr.write(f"min_time: {min_time}")
         ##
         # End Loop over various grid-sizes
-        print(" ")
+        sys.stderr.write(" ")
 
         # Task:
         # Generate and save plot showing convergence for this thread number
