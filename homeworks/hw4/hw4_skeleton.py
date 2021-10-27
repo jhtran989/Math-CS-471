@@ -128,7 +128,7 @@ def compute_fd(n, nt, k, f, fpp_num):
     #
     # y_pts contains all of the points in the y-direction for this thread's halo region
     # For the above example and thread 1 (k=1), this is y_pts = [0.33, 0.66, 1.0]
-    y_pts = linspace(start_halo * h, end_halo * h, (end_halo-start_halo))  # good
+    y_pts = linspace(start_halo * h, (end_halo-1) * h, (end_halo-start_halo))  # good
     #sys.stderr.write(f"x_pts: {x_pts.shape}\n")
     #sys.stderr.write(f"y_pts: {y_pts.shape}\n")
     # Task:
@@ -169,14 +169,12 @@ def compute_fd(n, nt, k, f, fpp_num):
     #sys.stderr.write(f"k: {k}\n")
     if k != 0 and k != (nt-1):
         output = output[n:-n]  # good
-    # < output array should be truncated to exclude values in the halo region >
     if k == 0 and nt == 1:
         output = output    # good
     if k == 0 and nt > 1:
         output = output[:-n]    # good
-    if k == (nt-1) and k != 0: #check if nt=1
+    if k == (nt-1) and k != 0:
         output = output[n:]   # good
-    # < you will need special cases to account for the first and last threads >
 
     #sys.stderr.write(f"start: {start}\n")
     #sys.stderr.write(f"end: {end}\n")
@@ -187,17 +185,8 @@ def compute_fd(n, nt, k, f, fpp_num):
     # Set the output array
     # fpp_num = array((end - start, ))
     # print(f"shape fpp_num: {fpp_num.shape}")
-    #sys.stderr.write(f"fpp_num: {fpp_num.shape}\n")
-    #sys.stderr.write(f"output: {output}\n")
-    #sys.stderr.write(f"output: {output.shape}\n")
-    #sys.stderr.write(f"fpp_num: {fpp_num}\n")
-    #sys.stderr.write(f"fpp_num: {fpp_num.shape}\n")
-    #sys.stderr.write(f"start: {start}\n")
-    #sys.stderr.write(f"end: {end}\n")
-    #sys.stderr.write(f"n: {n}\n")
-    #sys.stderr.write(f"start*n: {start*n}\n")
-    #sys.stderr.write(f"end*n: {end*n}\n")
-    fpp_num[(start*n):(end*n)] = output  # Check
+
+    fpp_num[(start*n):(end*n)] = output
 
 
 
@@ -233,7 +222,7 @@ if __name__ == "__main__":
     ##
     # Here are three problem size options for running.  The instructor has chosen these
     # for you.
-    option = 3
+    option = 2
     if option == 1:
         # Choose this if doing a final run on CARC for your strong scaling study
         NN = array([840 * 6])
@@ -243,12 +232,12 @@ if __name__ == "__main__":
         # and for initial runs on CARC.
         # You may want to start with just num_threads=[1] and debug the serial case first.
         NN = 210 * arange(1, 6)
-        num_threads = [1]  # eventually include 2, 3
+        num_threads = [4]  # eventually include 2, 3
     elif option == 3:
         # Choose this for code development and debugging on your laptop/lab machine
         # You may want to start with just num_threads=[1] and debug the serial case first.
         NN = array([6])
-        num_threads = [1]  # eventually include 2,3
+        num_threads = [3]  # eventually include 2,3
     else:
         sys.stderr.write("Incorrect Option!")
 
@@ -313,7 +302,7 @@ if __name__ == "__main__":
                 min_time = min(end - start, min_time)
             ##
             # End loop over timings
-            sys.stderr.write(" ")
+            print(" ")
 
             ##
             # Use testing-harness to make sure your threaded matvec works
@@ -336,39 +325,45 @@ if __name__ == "__main__":
             # mask on an array.  For example if boundary_points is True at 10
             # points and False at 90 points, then x[boundary_points] will be a
             # length 10 array at those 10 True locations
-            #boundary_points = (Y == 0)
-            #fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points], Y[boundary_points] - h)
+            boundary_points = (Y == 0)
+            fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points], Y[boundary_points] - h)
 
             # Task:
             # Account for the domain boundaries at Y == 1, X == 0, X == 1
-            #boundary_points = (Y == 1)
-            #fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points], Y[boundary_points] - h)
+            boundary_points = (Y == 1)
+            fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points], Y[boundary_points] + h)
 
-            #boundary_points = (X == 0)
-            #fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points], Y[boundary_points] - h)
+            boundary_points = (X == 0)
+            fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points] - h, Y[boundary_points])
 
-            #boundary_points = (X == 1)
-            #fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points], Y[boundary_points] - h)
+            boundary_points = (X == 1)
+            fpp_numeric[boundary_points] += (1 / h ** 2) * fcn(X[boundary_points] + h, Y[boundary_points])
 
             # < include code for these additional boundaries>
 
             # Task:
             # Compute error
+            sys.stderr.write(f"fpp: {fpp}")
+            sys.stderr.write(f"fpp_numeric: {fpp_numeric}")
             e = abs(fpp - fpp_numeric)
             error[i, j] = L2norm(e, h)
             timings[i, j] = min_time
-            sys.stderr.write(f"min_time: {min_time}")
+        sys.stderr.write(f"error: {error}")
+
         ##
         # End Loop over various grid-sizes
-        sys.stderr.write(" ")
+        print(" ")
 
+# error[i,:] error for i threads
         # Task:
         # Generate and save plot showing convergence for this thread number
         # --> Comment out plotting before running on CARC
-        # pyplot.loglog(NN, <array slice of error values>)
-        # pyplot.loglog(NN, <reference quadratic convergence data>)
+        #quad = linspace()
+        pyplot.loglog(NN, error[i,:]) #<array slice of error values>)
+        pyplot.loglog(NN, 1/(NN**2))
         # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
         # pyplot.savefig('error'+str(i)+'.png', dpi=500, format='png', bbox_inches='tight', pad_inches=0.0,)
+        pyplot.show()
 
     # Save timings for future use
     # savetxt('timings.txt', timings)
