@@ -1,0 +1,34 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1668365.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1668365.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler304 
+
+prologue running on host: wheeler304
+Agent pid 27156
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+t_1: 17.21836543083191
+timings: [17.21836543  9.43869328  7.0430491   5.59359765  5.38720489  4.93279576
+  4.68956661  4.3619988 ]
+num_threads: [1, 2, 3, 4, 5, 6, 7, 8]
+denominator: [17.21836543 18.87738657 21.12914729 22.3743906  26.93602443 29.59677458
+ 32.82696629 34.89599037]
+efficiency: [1.         0.91211595 0.81491057 0.76955684 0.63923188 0.58176493
+ 0.52451894 0.49341959]
+Wheeler Portable Batch System Epilogue
