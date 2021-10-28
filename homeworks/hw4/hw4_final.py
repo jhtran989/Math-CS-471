@@ -222,7 +222,7 @@ if __name__ == "__main__":
     ##
     # Here are three problem size options for running.  The instructor has chosen these
     # for you.
-    option = 3
+    option = 1
     if option == 1:
         # Choose this if doing a final run on CARC for your strong scaling study
         NN = array([840 * 6])
@@ -376,6 +376,8 @@ if __name__ == "__main__":
     #                    bbox_inches='tight', pad_inches=0.0, )
     #     pyplot.show()
 
+    strong_scaling_dir = "strong_scaling_images/"
+
     strong_scaling_plot = pyplot.figure(1)
     pyplot.plot(num_threads, timings)  # <array slice of
     # error
@@ -391,7 +393,10 @@ if __name__ == "__main__":
     pyplot.xlabel(f"Threads")
     pyplot.ylabel(f"Time (s)")
 
-    pyplot.savefig(f"strong_scaling.png", dpi=500, format='png',
+    strong_scaling_filename = f"strong_scaling.png"
+    strong_scaling_filepath = strong_scaling_dir + strong_scaling_filename
+
+    pyplot.savefig(strong_scaling_filepath, dpi=500, format='png',
                    bbox_inches='tight', pad_inches=0.0, )
     #pyplot.show()
 
@@ -426,7 +431,11 @@ if __name__ == "__main__":
     pyplot.xlabel(f"Threads")
     pyplot.ylabel(f"Efficiency")
 
-    pyplot.savefig(f"strong_scaling_efficiency.png", dpi=500, format='png',
+    strong_scaling_efficiency_filename = f"strong_scaling_efficiency.png"
+    strong_scaling_efficiency_filepath = strong_scaling_dir + \
+                              strong_scaling_efficiency_filename
+
+    pyplot.savefig(strong_scaling_efficiency_filepath, dpi=500, format='png',
                    bbox_inches='tight', pad_inches=0.0, )
     #pyplot.show()
 
