@@ -269,7 +269,8 @@ if __name__ == "__main__":
 
             # Task:
             # Choose the number of timings to do for each run
-            ntimings = 1  # <insert> ## Check but this seems decent
+            # changed to 5 from 1
+            ntimings = 5  # <insert> ## Check but this seems decent
 
             # Carry out timing experiment
             min_time = 10000
