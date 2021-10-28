@@ -50,8 +50,11 @@ HOMEWORK_FILENAME="hw4_final.py"
 # module load anaconda
 # source activate wheeler_mpi_py3_2021 
 module load miniconda3-4.7.12.1-gcc-4.8.5-lmtvtik
-conda init bash
-conda activate ${CONDA_ENV}
+source activate ${CONDA_ENV}
+
+## sometimes the shell is not configured with conda (require restart), so source was used instead above
+# conda init bash
+# conda activate ${CONDA_ENV}
 ########################################################################
 ########################################################################
 
