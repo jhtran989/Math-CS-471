@@ -14,7 +14,7 @@
 ## 10 minutes, switch "debug" to "default"
 #PBS -q debug
 
-## This is the filename for all printed output from your code
+## This is the name of job itself shown with qstat
 #PBS -N hw4_output
 
 ## This line ensures the script runs in Bash
@@ -23,6 +23,9 @@
 ## Send mail when the script aborts "a" and ends "e" to your email address
 #PBS -m ae
 #PBS -M jtran989@unm.edu 
+
+## This is the filename for all printed output from your code
+#PBS -o strong_scaling.output
 
 ## This line joins the output and error to print to the same file
 #PBS -j oe
