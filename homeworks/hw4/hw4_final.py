@@ -7,6 +7,8 @@ from poisson import poisson
 from check_matvec import check_matvec
 import sys
 
+from ec import compute_fd_2d
+
 
 def L2norm(e, h):
     '''
@@ -106,6 +108,9 @@ def compute_fd(n, nt, k, f, fpp_num):
         end_halo = end
     # good
     # end_halo = <end + 1, unless k == (nt-1)>
+
+    sys.stderr.write(f"start_halo: {start_halo}\n")
+    sys.stderr.write(f"end_halo: {end_halo}\n")
 
     # Construct local CSR matrix.  Here, you're given that function in poisson.py
     # This matrix will contain the extra halo domain rows
@@ -222,7 +227,7 @@ if __name__ == "__main__":
     ##
     # Here are three problem size options for running.  The instructor has chosen these
     # for you.
-    option = 1
+    option = 4
     if option == 1:
         # Choose this if doing a final run on CARC for your strong scaling study
         NN = array([840 * 6])
@@ -232,12 +237,15 @@ if __name__ == "__main__":
         # and for initial runs on CARC.
         # You may want to start with just num_threads=[1] and debug the serial case first.
         NN = 210 * arange(1, 6)
-        num_threads = [4]  # eventually include 2, 3
+        num_threads = [1]  # eventually include 2, 3
     elif option == 3:
         # Choose this for code development and debugging on your laptop/lab machine
         # You may want to start with just num_threads=[1] and debug the serial case first.
-        NN = array([1_000])
-        num_threads = [1, 2, 3, 4, 5, 6]  # eventually include 2,3
+        NN = array([6])
+        num_threads = [1]  # eventually include 2,3
+    elif option == 4: # our designated option for 2D partition
+        NN = array([12])
+        num_threads = [16]  # eventually include 9, 16
     else:
         sys.stderr.write("Incorrect Option!")
 
@@ -269,8 +277,7 @@ if __name__ == "__main__":
 
             # Task:
             # Choose the number of timings to do for each run
-            # changed to 5 from 1
-            ntimings = 5  # <insert> ## Check but this seems decent
+            ntimings = 1  # <insert> ## Check but this seems decent
 
             # Carry out timing experiment
             min_time = 10000
@@ -286,7 +293,16 @@ if __name__ == "__main__":
                     # Task:
                     # Finish this call to Thread(), passing in the correct target and arguments
                     # args n, nt, k, f, fpp_num
-                    t_list.append(Thread(target=compute_fd, args=(n, nt, k, fcn, fpp_numeric)))
+
+                    # Personal addition for option 4: 2D partition
+                    if option != 4:
+                        t_list.append(Thread(target=compute_fd,
+                                             args=(n, nt, k, fcn, fpp_numeric)))
+                    else:
+                        #FIXME: test sequentially first
+                        # t_list.append(Thread(target=compute_fd_2d,
+                        #                      args=(n, nt, k, fcn, fpp_numeric)))
+                        compute_fd_2d(n, nt, k, fcn, fpp_numeric)
                     # t_list.append(Thread(target=<insert>, args=<insert tuple of arguments> ))
 
                 start = time.time()
@@ -308,8 +324,17 @@ if __name__ == "__main__":
             ##
             # Use testing-harness to make sure your threaded matvec works
             # This call should print zero (or a numerically zero value)
-            if option == 2 or option == 3:
+            if option != 1:
                 check_matvec(fpp_numeric, n, fcn)
+
+                num_check = n**2 - 1
+                for row in range(n):
+                    for column in range(n):
+                        current_num = num_check - 5 + 2 * column
+                        print(f"{current_num:3d}", end=" ")
+                        num_check -= 1
+                    print(f"")
+
 
             # Construct grid of evenly spaced points for a reference evaluation of
             # the double derivative
@@ -347,8 +372,15 @@ if __name__ == "__main__":
             # sys.stderr.write(f"fpp: {fpp}")
             # sys.stderr.write(f"fpp_numeric: {fpp_numeric}")
             e = abs(fpp - fpp_numeric)
+            #sys.stderr.write(f"e: {e}\n")
             error[i, j] = L2norm(e, h)
             timings[i, j] = min_time
+
+            sys.stderr.write(f"n: {n}\n")
+            sys.stderr.write(f"fpp: {fpp}\n")
+            sys.stderr.write(f"fpp_numeric: {fpp_numeric}\n")
+            sys.stderr.write(f"error: {error}\n")
+            sys.stderr.write(f"NN: {NN}\n")
         # sys.stderr.write(f"error: {error}")
 
         ##
@@ -361,91 +393,97 @@ if __name__ == "__main__":
         # --> Comment out plotting before running on CARC
         #quad = linspace()
 
-    #     sys.stderr.write(f"error: {error}\n")
-    #     sys.stderr.write(f"NN: {NN}\n")
-    #     pyplot.loglog(NN, error[i,:], "bo-") #<array slice of error values>)
-    #     pyplot.loglog(NN, 1/(NN**2), "bo-")
-    #
-    # # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
-    #     pyplot.grid(True, which="both", linestyle="dashed")
-    #     pyplot.title(r"Error Plot for Various Threads")
-    #     pyplot.legend(loc="upper left")
-    #     pyplot.xlabel(r"$n$")
-    #     pyplot.ylabel(r"$|e|_{L_2}$")
-    #
-    #     pyplot.savefig('error' + str(i) + '.png', dpi=500, format='png',
-    #                    bbox_inches='tight', pad_inches=0.0, )
-    #     pyplot.show()
+        # change to just option 2
+        if option == 2:
+            #print(timings)
 
-    strong_scaling_dir = "strong_scaling_images/"
+            # sys.stderr.write(f"error: {error}\n")
+            # sys.stderr.write(f"NN: {NN}\n")
+            pyplot.loglog(NN, error[i,:]) #<array slice of error values>)
+            pyplot.loglog(NN, 1/(NN**2))
 
-    strong_scaling_plot = pyplot.figure(1)
-    pyplot.plot(num_threads, timings)  # <array slice of
-    # error
-    # values>)
-    #pyplot.loglog(NN, 1 / (NN ** 2), "bo-")
+        # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
+            pyplot.grid(True, which="both", linestyle="dashed")
+            pyplot.title(f"Error Plot for {nt} Threads")
+            pyplot.legend(["error", "quadratic reference"], loc="upper right")
+            pyplot.xlabel(r"$n$")
+            pyplot.ylabel(r"$|e|_{L_2}$")
 
-    # assume there's only one element in NN
+            pyplot.savefig('error' + str(nt) + 'threads.png', dpi=500,
+                           format='png',
+                           bbox_inches='tight', pad_inches=0.0, )
+            pyplot.show()
 
-    # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
-    #pyplot.grid(True, which="both", linestyle="dashed")
-    pyplot.title(f"Strong Scaling, n = {NN[0]}")
-    #pyplot.legend(loc="upper left")
-    pyplot.xlabel(f"Threads")
-    pyplot.ylabel(f"Time (s)")
+    if option == 1:
+        strong_scaling_dir = "strong_scaling_images/"
 
-    strong_scaling_filename = f"strong_scaling.png"
-    strong_scaling_filepath = strong_scaling_dir + strong_scaling_filename
+        strong_scaling_plot = pyplot.figure(1)
+        pyplot.plot(num_threads, timings)  # <array slice of
+        # error
+        # values>)
+        #pyplot.loglog(NN, 1 / (NN ** 2), "bo-")
 
-    pyplot.savefig(strong_scaling_filepath, dpi=500, format='png',
-                   bbox_inches='tight', pad_inches=0.0, )
-    #pyplot.show()
+        # assume there's only one element in NN
 
-    strong_scaling_efficiency_plot = pyplot.figure(2)
+        # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
+        #pyplot.grid(True, which="both", linestyle="dashed")
+        pyplot.title(f"Strong Scaling, n = {NN[0]}")
+        #pyplot.legend(loc="upper left")
+        pyplot.xlabel(f"Threads")
+        pyplot.ylabel(f"Time (s)")
 
-    # need to fix shape of timings
-    timings = timings.ravel()
+        strong_scaling_filename = f"strong_scaling.png"
+        strong_scaling_filepath = strong_scaling_dir + strong_scaling_filename
 
-    # efficiency = np.zeros((num_threads_length, ))
-    t_1 = timings[0] # assume 1 thread was the first calculated
-    print(f"t_1: {t_1}")
-    print(f"timings: {timings}")
-    print(f"num_threads: {num_threads}")
+        pyplot.savefig(strong_scaling_filepath, dpi=500, format='png',
+                       bbox_inches='tight', pad_inches=0.0, )
+        #pyplot.show()
 
-    denominator = multiply(timings, num_threads)
+        strong_scaling_efficiency_plot = pyplot.figure(2)
 
-    print(f"denominator: {denominator}")
+        # need to fix shape of timings
+        timings = timings.ravel()
 
-    efficiency = t_1 / denominator
+        # efficiency = np.zeros((num_threads_length, ))
+        t_1 = timings[0] # assume 1 thread was the first calculated
+        print(f"t_1: {t_1}")
+        print(f"timings: {timings}")
+        print(f"num_threads: {num_threads}")
 
-    print(f"efficiency: {efficiency}")
+        denominator = multiply(timings, num_threads)
 
-    pyplot.plot(num_threads, efficiency)  # <array slice of
-    # error
-    # values>)
-    # pyplot.loglog(NN, 1 / (NN ** 2), "bo-")
+        print(f"denominator: {denominator}")
 
-    # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
-    # pyplot.grid(True, which="both", linestyle="dashed")
-    pyplot.title(f"Strong Scaling Efficiency, n = {NN[0]}")
-    # pyplot.legend(loc="upper left")
-    pyplot.xlabel(f"Threads")
-    pyplot.ylabel(f"Efficiency")
+        efficiency = t_1 / denominator
 
-    strong_scaling_efficiency_filename = f"strong_scaling_efficiency.png"
-    strong_scaling_efficiency_filepath = strong_scaling_dir + \
-                              strong_scaling_efficiency_filename
+        print(f"efficiency: {efficiency}")
 
-    pyplot.savefig(strong_scaling_efficiency_filepath, dpi=500, format='png',
-                   bbox_inches='tight', pad_inches=0.0, )
-    #pyplot.show()
+        pyplot.plot(num_threads, efficiency)  # <array slice of
+        # error
+        # values>)
+        # pyplot.loglog(NN, 1 / (NN ** 2), "bo-")
+
+        # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
+        # pyplot.grid(True, which="both", linestyle="dashed")
+        pyplot.title(f"Strong Scaling Efficiency, n = {NN[0]}")
+        # pyplot.legend(loc="upper left")
+        pyplot.xlabel(f"Threads")
+        pyplot.ylabel(f"Efficiency")
+
+        strong_scaling_efficiency_filename = f"strong_scaling_efficiency.png"
+        strong_scaling_efficiency_filepath = strong_scaling_dir + \
+                                  strong_scaling_efficiency_filename
+
+        pyplot.savefig(strong_scaling_efficiency_filepath, dpi=500, format='png',
+                       bbox_inches='tight', pad_inches=0.0, )
+        #pyplot.show()
 
 
 
 
 
 
-    # Save timings for future use
-    # savetxt('timings.txt', timings)
+        # Save timings for future use
+        # savetxt('timings.txt', timings)
 
 
