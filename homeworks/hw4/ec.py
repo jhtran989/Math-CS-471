@@ -9,6 +9,9 @@ import sys
 from timeit import default_timer as timer
 
 
+DEBUG = False
+
+
 def L2norm(e, h):
     '''
     Take L2-norm of e
@@ -49,9 +52,11 @@ def get_2d_case_output(offset, output, num_elements_row, POSITION):
     #     output = output
 
     num_rows = len(output) // num_elements_row
-    sys.stderr.write(f"num rows: {num_rows}\n")
-    sys.stderr.write(f"offset: {offset}\n")
-    sys.stderr.write(f"position: {POSITION}\n")
+
+    if DEBUG:
+        sys.stderr.write(f"num rows: {num_rows}\n")
+        sys.stderr.write(f"offset: {offset}\n")
+        sys.stderr.write(f"position: {POSITION}\n")
 
     temporary_output = []
     for i in range(0, num_rows):
@@ -63,8 +68,9 @@ def get_2d_case_output(offset, output, num_elements_row, POSITION):
 
     output = list(concatenate(temporary_output).flat)
 
-    sys.stderr.write(f"(in function) output length: {len(output)}\n")
-    sys.stderr.write(f"(in function) output: {output}\n")
+    if DEBUG:
+        sys.stderr.write(f"(in function) output length: {len(output)}\n")
+        sys.stderr.write(f"(in function) output: {output}\n")
 
     return output  # doesn't pass by reference?
 
@@ -140,15 +146,16 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
     x_ind = k % dimension_length
     y_ind = k // dimension_length
 
-    sys.stderr.write(f"number of threads: {nt}\n")
-    sys.stderr.write(f"dimension length: {dimension_length}\n")
-    sys.stderr.write(f"n: {n}\n")
-    sys.stderr.write(f"start_x: {start_x}\n")
-    sys.stderr.write(f"end_x: {end_x}\n")
-    sys.stderr.write(f"start_y: {start_y}\n")
-    sys.stderr.write(f"end_y: {end_y}\n")
-    sys.stderr.write(f"x index: {x_ind}\n")
-    sys.stderr.write(f"y index: {y_ind}\n")
+    if DEBUG:
+        sys.stderr.write(f"number of threads: {nt}\n")
+        sys.stderr.write(f"dimension length: {dimension_length}\n")
+        sys.stderr.write(f"n: {n}\n")
+        sys.stderr.write(f"start_x: {start_x}\n")
+        sys.stderr.write(f"end_x: {end_x}\n")
+        sys.stderr.write(f"start_y: {start_y}\n")
+        sys.stderr.write(f"end_y: {end_y}\n")
+        sys.stderr.write(f"x index: {x_ind}\n")
+        sys.stderr.write(f"y index: {y_ind}\n")
 
     # integer>
     # good
@@ -200,10 +207,11 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
     else:
         end_halo_x = end_x
 
-    sys.stderr.write(f"start_halo_x: {start_halo_x}\n")
-    sys.stderr.write(f"end_halo_x: {end_halo_x}\n")
-    sys.stderr.write(f"start_halo_y: {start_halo_y}\n")
-    sys.stderr.write(f"end_halo_y: {end_halo_y}\n")
+    if DEBUG:
+        sys.stderr.write(f"start_halo_x: {start_halo_x}\n")
+        sys.stderr.write(f"end_halo_x: {end_halo_x}\n")
+        sys.stderr.write(f"start_halo_y: {start_halo_y}\n")
+        sys.stderr.write(f"end_halo_y: {end_halo_y}\n")
 
 
     # good
@@ -211,7 +219,8 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
 
     # Construct local CSR matrix.  Here, you're given that function in poisson.py
     # This matrix will contain the extra halo domain rows
-    A = poisson((end_halo_x - start_halo_x, end_halo_y - start_halo_y), format='csr')
+
+    A = poisson((end_halo_y - start_halo_y, end_halo_x - start_halo_x), format='csr')
     h = 1. / (n - 1)
     A *= 1 / h ** 2
 
@@ -249,9 +258,19 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
     # y_region = Y[start_halo:end_halo]
     # print("x_region = ", x_region.size)
     # print("y_region =", y_region.size)
-    sys.stderr.write(f"X: {X.shape}\n")
-    sys.stderr.write(f"Y: {Y.shape}\n")
+    if DEBUG:
+        sys.stderr.write(f"X shape: {X.shape}\n")
+        sys.stderr.write(f"X: {X}\n")
+        sys.stderr.write(f"Y shape: {Y.shape}\n")
+        sys.stderr.write(f"Y: {Y}\n")
+
     f_vals = f(X, Y)  # < f evaluated at X and Y > # good
+
+    if DEBUG:
+        sys.stderr.write(f"A section: \n")
+        sys.stderr.write(f"{A.todense()}\n")
+        sys.stderr.write(f"fvals: \n")
+        sys.stderr.write(f"{f_vals}\n")
 
     # Task:
     # Compute the correct range of output values for this thread
@@ -262,7 +281,9 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
     #sys.stderr.write(f"f_vals: {f_vals.shape}\n")
 
     output = A * f_vals
-    sys.stderr.write(f"initial output: {output}\n")
+
+    if DEBUG:
+        sys.stderr.write(f"initial output: {output}\n")
     #print("output_init", output)
     # print(f"output: {output}")
     # print(f"output shape: {output.shape}")
@@ -287,7 +308,8 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
     num_elements_row = end_halo_x - start_halo_x
     num_elements_column = end_halo_y - start_halo_y
 
-    sys.stderr.write(f"initial num elements row: {num_elements_row}\n")
+    if DEBUG:
+        sys.stderr.write(f"initial num elements row: {num_elements_row}\n")
 
     # need to check for nt == 1
     if nt == 1:
@@ -304,7 +326,10 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
                 y_ind != (dimension_length-1):  # mid thread
             # output = output[n:-n]
 
-            sys.stderr.write(f"Middle\n")
+            if DEBUG:
+                sys.stderr.write(f"------")
+                sys.stderr.write(f"Middle")
+                sys.stderr.write(f"------\n")
 
             offset = [1, -1]
             POSITION = "m"
@@ -313,7 +338,10 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
             # wall on left
             #output = output
 
-            sys.stderr.write(f"Wall Left\n")
+            if DEBUG:
+                sys.stderr.write(f"------")
+                sys.stderr.write(f"Wall Left")
+                sys.stderr.write(f"------\n")
 
             offset = [0, -1]
             POSITION = "m"
@@ -322,7 +350,10 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
                 dimension_length - 1): # wall on right
             #output = output[:-n]
 
-            sys.stderr.write(f"Wall Right\n")
+            if DEBUG:
+                sys.stderr.write(f"------")
+                sys.stderr.write(f"Wall Right")
+                sys.stderr.write(f"------\n")
 
             offset = [1, 0]
             POSITION = "m"
@@ -331,7 +362,10 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
             # wall on bottom
             #output = output[n:]
 
-            sys.stderr.write(f"Wall Bottom\n")
+            if DEBUG:
+                sys.stderr.write(f"------")
+                sys.stderr.write(f"Wall Bottom")
+                sys.stderr.write(f"------\n")
 
             offset = [1, -1]
             POSITION = "b"
@@ -340,7 +374,10 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
                 and x_ind != (dimension_length - 1): # wall on top
             #output = output[n:]
 
-            sys.stderr.write(f"Wall Top\n")
+            if DEBUG:
+                sys.stderr.write(f"------")
+                sys.stderr.write(f"Wall Top")
+                sys.stderr.write(f"------\n")
 
             offset = [1, -1]
             POSITION = "t"
@@ -349,7 +386,10 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
             # top right corner
             #output = output[n:]
 
-            sys.stderr.write(f"Top Right Corner\n")
+            if DEBUG:
+                sys.stderr.write(f"------")
+                sys.stderr.write(f"Top Right Corner")
+                sys.stderr.write(f"------\n")
 
             offset = [1, 0]
             POSITION = "t"
@@ -357,7 +397,10 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
         if y_ind == 0 and x_ind == (dimension_length - 1): # bottom right corner
             #output = output[n:]
 
-            sys.stderr.write(f"Bottom Right Corner\n")
+            if DEBUG:
+                sys.stderr.write(f"------")
+                sys.stderr.write(f"Bottom Right Corner")
+                sys.stderr.write(f"------\n")
 
             offset = [1, 0]
             POSITION = "b"
@@ -365,7 +408,10 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
         if y_ind == 0 and x_ind == 0: # bottom left corner
             #output = output[n:]
 
-            sys.stderr.write(f"Bottom Left Corner\n")
+            if DEBUG:
+                sys.stderr.write(f"------")
+                sys.stderr.write(f"Bottom Left Corner")
+                sys.stderr.write(f"------\n")
 
             offset = [0, -1]
             POSITION = "b"
@@ -373,7 +419,10 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
         if y_ind == (dimension_length - 1) and x_ind == 0: # top left corner
             #output = output[n:]
 
-            sys.stderr.write(f"Top Left Corner\n")
+            if DEBUG:
+                sys.stderr.write(f"------")
+                sys.stderr.write(f"Top Left Corner")
+                sys.stderr.write(f"------\n")
 
             offset = [0, -1]
             POSITION = "t"
@@ -394,27 +443,33 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
 
     final_num_elements_row = n // dimension_length
 
-    sys.stderr.write(f"final num elements row: {final_num_elements_row}\n")
-    sys.stderr.write(f"output length: {len(output)}\n")
-    sys.stderr.write(f"output: {output}\n")
+    if DEBUG:
+        sys.stderr.write(f"final num elements row: {final_num_elements_row}\n")
+        sys.stderr.write(f"output length: {len(output)}\n")
+        sys.stderr.write(f"output: {output}\n")
 
     for row_output, row_fpp in enumerate(range(start_y, end_y)):
-        sys.stderr.write(f"row_output: {row_output}, row_fpp: {row_fpp}\n")
+        if DEBUG:
+            sys.stderr.write(f"row_output: {row_output}, row_fpp: {row_fpp}\n")
 
         start_output = row_output * final_num_elements_row
         end_output = (row_output + 1) * final_num_elements_row
 
-        sys.stderr.write(f"start output: {start_output}\n")
-        sys.stderr.write(f"end output: {end_output}\n")
+        if DEBUG:
+            sys.stderr.write(f"start output: {start_output}\n")
+            sys.stderr.write(f"end output: {end_output}\n")
 
         row_fpp_final = row_fpp * n
-        sys.stderr.write(f"row_fpp_final: {row_fpp_final}\n")
+
+        if DEBUG:
+            sys.stderr.write(f"row_fpp_final: {row_fpp_final}\n")
 
         start_fpp = row_fpp_final + start_x
         end_fpp = row_fpp_final + end_x
 
-        sys.stderr.write(f"fpp start: {start_fpp}\n")
-        sys.stderr.write(f"fpp end: {end_fpp}\n")
+        if DEBUG:
+            sys.stderr.write(f"fpp start: {start_fpp}\n")
+            sys.stderr.write(f"fpp end: {end_fpp}\n")
 
         fpp_num[start_fpp:end_fpp] \
             = output[start_output:end_output]

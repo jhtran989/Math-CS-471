@@ -10,6 +10,9 @@ import sys
 from ec import compute_fd_2d
 
 
+DEBUG = False
+
+
 def L2norm(e, h):
     '''
     Take L2-norm of e
@@ -109,8 +112,9 @@ def compute_fd(n, nt, k, f, fpp_num):
     # good
     # end_halo = <end + 1, unless k == (nt-1)>
 
-    sys.stderr.write(f"start_halo: {start_halo}\n")
-    sys.stderr.write(f"end_halo: {end_halo}\n")
+    if DEBUG:
+        sys.stderr.write(f"start_halo: {start_halo}\n")
+        sys.stderr.write(f"end_halo: {end_halo}\n")
 
     # Construct local CSR matrix.  Here, you're given that function in poisson.py
     # This matrix will contain the extra halo domain rows
@@ -151,8 +155,10 @@ def compute_fd(n, nt, k, f, fpp_num):
     # y_region = Y[start_halo:end_halo]
     # print("x_region = ", x_region.size)
     # print("y_region =", y_region.size)
-    #sys.stderr.write(f"X: {X.shape}\n")
-    #sys.stderr.write(f"Y: {Y.shape}\n")
+    # sys.stderr.write(f"X shape: {X.shape}\n")
+    # sys.stderr.write(f"X: {X}\n")
+    # sys.stderr.write(f"Y shape: {Y.shape}\n")
+    # sys.stderr.write(f"Y: {Y}\n")
     f_vals = f(X, Y)  # < f evaluated at X and Y > # good
 
     # Task:
@@ -223,31 +229,67 @@ def fcnpp(x, y):
                 9 * (y + 1) ** (5 / 3))
     return first_portion_x + second_portion_x + first_portion_y + second_portion_y
 
+
+def print_fpp_stderr(fpp, n):
+    for row in range(n):
+        for column in range(n):
+            sys.stderr.write(f"{fpp[n * row + column]} ")
+        sys.stderr.write(f"\n")
+    sys.stderr.write(f"\n")
+
+
+def print_fpp(fpp, n):
+    for row in range(n):
+        for column in range(n):
+            print(f"{fpp[n * row + column]}", end=" ")
+        print(f"")
+    print(f"")
+
+
 if __name__ == "__main__":
     ##
     # Here are three problem size options for running.  The instructor has chosen these
     # for you.
-    option = 4
+    option = 6
+    partition = -1
+
     if option == 1:
         # Choose this if doing a final run on CARC for your strong scaling study
         NN = array([840 * 6])
         num_threads = [1, 2, 3, 4, 5, 6, 7, 8]
+        partition = 1
     elif option == 2:
         # Choose this for printing convergence plots on your laptop/lab machine,
         # and for initial runs on CARC.
         # You may want to start with just num_threads=[1] and debug the serial case first.
         NN = 210 * arange(1, 6)
         num_threads = [1]  # eventually include 2, 3
+        partition = 1
     elif option == 3:
         # Choose this for code development and debugging on your laptop/lab machine
         # You may want to start with just num_threads=[1] and debug the serial case first.
         NN = array([6])
         num_threads = [1]  # eventually include 2,3
-    elif option == 4: # our designated option for 2D partition
+        partition = 1
+    elif option == 4:  # our designated option for 2D partition
         NN = array([12])
         num_threads = [16]  # eventually include 9, 16
+        partition = 2
+    elif option == 5:
+        NN = 210 * arange(1, 6)
+        num_threads = [1, 4, 9]
+        partition = 2
+    elif option == 6:
+        # Choose this if doing a final run on CARC for your strong scaling study
+        NN = array([840 * 6])
+        num_threads = [1, 4, 9]
+        partition = 2
     else:
         sys.stderr.write("Incorrect Option!")
+        exit(99)
+
+    print(f"Using Option {option}...")
+    print(f"Using Partition {partition}D...")
 
     ##
     # Begin main computation loop
@@ -295,14 +337,17 @@ if __name__ == "__main__":
                     # args n, nt, k, f, fpp_num
 
                     # Personal addition for option 4: 2D partition
-                    if option != 4:
+                    if option != 4 and option != 5 and option != 6:
+                        #sys.stderr.write(f"Using 1D partition...\n")
                         t_list.append(Thread(target=compute_fd,
                                              args=(n, nt, k, fcn, fpp_numeric)))
                     else:
+                        #sys.stderr.write(f"Using 2D partition...")
                         #FIXME: test sequentially first
-                        # t_list.append(Thread(target=compute_fd_2d,
-                        #                      args=(n, nt, k, fcn, fpp_numeric)))
-                        compute_fd_2d(n, nt, k, fcn, fpp_numeric)
+                        t_list.append(Thread(target=compute_fd_2d,
+                                             args=(n, nt, k, fcn, fpp_numeric)))
+
+                        #compute_fd_2d(n, nt, k, fcn, fpp_numeric)
                     # t_list.append(Thread(target=<insert>, args=<insert tuple of arguments> ))
 
                 start = time.time()
@@ -324,16 +369,17 @@ if __name__ == "__main__":
             ##
             # Use testing-harness to make sure your threaded matvec works
             # This call should print zero (or a numerically zero value)
-            if option != 1:
+            if option != 1 and option != 6:
                 check_matvec(fpp_numeric, n, fcn)
 
-                num_check = n**2 - 1
-                for row in range(n):
-                    for column in range(n):
-                        current_num = num_check - 5 + 2 * column
-                        print(f"{current_num:3d}", end=" ")
-                        num_check -= 1
-                    print(f"")
+                if DEBUG:
+                    num_check = n**2 - 1
+                    for row in range(n):
+                        for column in range(n):
+                            current_num = num_check - 5 + 2 * column
+                            print(f"{current_num:3d}", end=" ")
+                            num_check -= 1
+                        print(f"")
 
 
             # Construct grid of evenly spaced points for a reference evaluation of
@@ -376,16 +422,22 @@ if __name__ == "__main__":
             error[i, j] = L2norm(e, h)
             timings[i, j] = min_time
 
-            sys.stderr.write(f"n: {n}\n")
-            sys.stderr.write(f"fpp: {fpp}\n")
-            sys.stderr.write(f"fpp_numeric: {fpp_numeric}\n")
-            sys.stderr.write(f"error: {error}\n")
-            sys.stderr.write(f"NN: {NN}\n")
+            if DEBUG:
+                sys.stderr.write(f"n: {n}\n")
+                sys.stderr.write(f"fpp: {fpp}\n")
+                #print_fpp(fpp, n)
+                sys.stderr.write(f"fpp_numeric: {fpp_numeric}\n")
+                #print_fpp(fpp_numeric, n)
+                sys.stderr.write(f"error: {error}\n")
+                sys.stderr.write(f"NN: {NN}\n")
         # sys.stderr.write(f"error: {error}")
 
         ##
         # End Loop over various grid-sizes
+
         print(" ")
+        print(f"timings:")
+        print(timings)
 
 # error[i,:] error for i threads
         # Task:
@@ -394,7 +446,7 @@ if __name__ == "__main__":
         #quad = linspace()
 
         # change to just option 2
-        if option == 2:
+        if option == 2 or option == 5:
             #print(timings)
 
             # sys.stderr.write(f"error: {error}\n")
@@ -404,18 +456,19 @@ if __name__ == "__main__":
 
         # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
             pyplot.grid(True, which="both", linestyle="dashed")
-            pyplot.title(f"Error Plot for {nt} Threads")
+            pyplot.title(f"Error Plot for {nt} Threads, {partition}D Partition")
             pyplot.legend(["error", "quadratic reference"], loc="upper right")
             pyplot.xlabel(r"$n$")
             pyplot.ylabel(r"$|e|_{L_2}$")
 
-            pyplot.savefig('error' + str(nt) + 'threads.png', dpi=500,
+            pyplot.savefig(f'error' + str(nt)
+                           + f'threads-' + f'{partition}D.png', dpi=500,
                            format='png',
                            bbox_inches='tight', pad_inches=0.0, )
             pyplot.show()
 
-    if option == 1:
-        strong_scaling_dir = "strong_scaling_images/"
+    if option == 1 or option == 6:
+        strong_scaling_dir = f"strong_scaling_images_{partition}D/"
 
         strong_scaling_plot = pyplot.figure(1)
         pyplot.plot(num_threads, timings)  # <array slice of
@@ -427,12 +480,12 @@ if __name__ == "__main__":
 
         # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
         #pyplot.grid(True, which="both", linestyle="dashed")
-        pyplot.title(f"Strong Scaling, n = {NN[0]}")
+        pyplot.title(f"Strong Scaling, n = {NN[0]}, {partition}D Partition")
         #pyplot.legend(loc="upper left")
         pyplot.xlabel(f"Threads")
         pyplot.ylabel(f"Time (s)")
 
-        strong_scaling_filename = f"strong_scaling.png"
+        strong_scaling_filename = f"strong_scaling_{partition}D.png"
         strong_scaling_filepath = strong_scaling_dir + strong_scaling_filename
 
         pyplot.savefig(strong_scaling_filepath, dpi=500, format='png',
@@ -465,17 +518,22 @@ if __name__ == "__main__":
 
         # <insert nice formatting options with large axis labels, tick fontsizes, and large legend labels>
         # pyplot.grid(True, which="both", linestyle="dashed")
-        pyplot.title(f"Strong Scaling Efficiency, n = {NN[0]}")
+        pyplot.title(f"Strong Scaling Efficiency, n = {NN[0]}, "
+                     f"{partition}D Partition")
         # pyplot.legend(loc="upper left")
         pyplot.xlabel(f"Threads")
         pyplot.ylabel(f"Efficiency")
 
-        strong_scaling_efficiency_filename = f"strong_scaling_efficiency.png"
+        strong_scaling_efficiency_filename = \
+            f"strong_scaling_efficiency_{partition}D.png"
         strong_scaling_efficiency_filepath = strong_scaling_dir + \
                                   strong_scaling_efficiency_filename
 
-        pyplot.savefig(strong_scaling_efficiency_filepath, dpi=500, format='png',
-                       bbox_inches='tight', pad_inches=0.0, )
+        pyplot.savefig(strong_scaling_efficiency_filepath, dpi=500,
+                       format='png',
+                       bbox_inches='tight', pad_inches=0.0)
+
+        #REMEMBER TO COMMENT
         #pyplot.show()
 
 
