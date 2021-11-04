@@ -23,7 +23,53 @@ def L2norm(e, h):
     return linalg.norm(e) * (h)  ### good
 
 
-def compute_fd(n, nt, k, f, fpp_num): # new
+def get_2d_case_output(offset, output, num_elements_row, POSITION):
+    # output = output
+
+    if POSITION == "t":
+        output = output[num_elements_row:]
+    elif POSITION == "m":
+        output = output[num_elements_row:-num_elements_row]
+    elif POSITION == "b":
+        output = output[:-num_elements_row]
+    else:
+        sys.stderr.write(f"INVALID POSITION: please choose from 't', 'm', "
+                         f"or 'b'")
+        exit(99)
+
+    # if offset[0] != 0 and offset[1] == 0:
+    #     output = output[num_elements_row:]
+    # elif offset[0] == 0 and offset[1] != 0:
+    #     output = output[:-num_elements_row]
+    # elif offset[0] != 0 and offset[1] != 0:
+    #     output = output[num_elements_row:-num_elements_row]
+    # else:
+    #     # if offset[0] == 0 and offset[1] == 0:
+    #     # do nothing
+    #     output = output
+
+    num_rows = len(output) // num_elements_row
+    sys.stderr.write(f"num rows: {num_rows}\n")
+    sys.stderr.write(f"offset: {offset}\n")
+    sys.stderr.write(f"position: {POSITION}\n")
+
+    temporary_output = []
+    for i in range(0, num_rows):
+        start_output = (i * num_elements_row) + offset[0]
+        end_output = ((i + 1) * num_elements_row) + offset[1]
+
+        temporary_output.append(output[start_output:end_output])
+        # temporary_output.append(output[:-1])
+
+    output = list(concatenate(temporary_output).flat)
+
+    sys.stderr.write(f"(in function) output length: {len(output)}\n")
+    sys.stderr.write(f"(in function) output: {output}\n")
+
+    return output  # doesn't pass by reference?
+
+
+def compute_fd_2d(n, nt, k, f, fpp_num): # new
     '''
     Compute the numeric second derivative of the function 'f' with a
     threaded matrix-vector multiply.
@@ -74,20 +120,35 @@ def compute_fd(n, nt, k, f, fpp_num): # new
     # y[start:end] --> [0, 0.33]
     #start = int(k * (n / nt))
 
-    start_y = int(k // sqrt(nt))*sqrt(nt)
-    start_x = int(k % sqrt(nt))*sqrt(nt)
-    sys.stderr.write(f"start_y: {start_y}")
-    sys.stderr.write(f"start_x: {start_x}")
+    sys.stderr.write(f"--------------------------------------\n")
+    
+    dimension_length = int(sqrt(nt))
 
+    start_x = int(int(k % dimension_length) * n / dimension_length)
+    start_y = int(int(k // dimension_length) * n / dimension_length)
+    # start_x = int(int(k % dimension_length))
+    # start_y = int(int(k // dimension_length))
 
     #  <first domain row owned by thread k,
     # cast as integer>
     #end = int((k + 1) * (n / nt))  #  <first domain row owned by thread k+1, cast as
-    end_y = (int(k // sqrt(nt)) +1) *sqrt(nt)
-    end_x = (int(k % sqrt(nt)) +1) *sqrt(nt)
+    end_y = int((int(k // dimension_length) + 1) * n / dimension_length)
+    end_x = int((int(k % dimension_length) + 1) * n / dimension_length)
+    # end_y = int((int(k // dimension_length) + 1))
+    # end_x = int((int(k % dimension_length) + 1))
 
-    x_ind = k % sqrt(nt)
-    y_ind = k // sqrt(nt)
+    x_ind = k % dimension_length
+    y_ind = k // dimension_length
+
+    sys.stderr.write(f"number of threads: {nt}\n")
+    sys.stderr.write(f"dimension length: {dimension_length}\n")
+    sys.stderr.write(f"n: {n}\n")
+    sys.stderr.write(f"start_x: {start_x}\n")
+    sys.stderr.write(f"end_x: {end_x}\n")
+    sys.stderr.write(f"start_y: {start_y}\n")
+    sys.stderr.write(f"end_y: {end_y}\n")
+    sys.stderr.write(f"x index: {x_ind}\n")
+    sys.stderr.write(f"y index: {y_ind}\n")
 
     # integer>
     # good
@@ -124,7 +185,7 @@ def compute_fd(n, nt, k, f, fpp_num): # new
         start_halo_y = start_y - 1
     else:
         start_halo_y = start_y
-    if y_ind < (sqrt(nt) - 1):
+    if y_ind < (dimension_length - 1):
         end_halo_y = end_y + 1
     else:
         end_halo_y = end_y
@@ -134,10 +195,15 @@ def compute_fd(n, nt, k, f, fpp_num): # new
         start_halo_x = start_x - 1
     else:
         start_halo_x = start_x
-    if x_ind < (sqrt(nt) - 1):
+    if x_ind < (dimension_length - 1):
         end_halo_x = end_x + 1
     else:
         end_halo_x = end_x
+
+    sys.stderr.write(f"start_halo_x: {start_halo_x}\n")
+    sys.stderr.write(f"end_halo_x: {end_halo_x}\n")
+    sys.stderr.write(f"start_halo_y: {start_halo_y}\n")
+    sys.stderr.write(f"end_halo_y: {end_halo_y}\n")
 
 
     # good
@@ -183,8 +249,8 @@ def compute_fd(n, nt, k, f, fpp_num): # new
     # y_region = Y[start_halo:end_halo]
     # print("x_region = ", x_region.size)
     # print("y_region =", y_region.size)
-    #sys.stderr.write(f"X: {X.shape}\n")
-    #sys.stderr.write(f"Y: {Y.shape}\n")
+    sys.stderr.write(f"X: {X.shape}\n")
+    sys.stderr.write(f"Y: {Y.shape}\n")
     f_vals = f(X, Y)  # < f evaluated at X and Y > # good
 
     # Task:
@@ -196,6 +262,7 @@ def compute_fd(n, nt, k, f, fpp_num): # new
     #sys.stderr.write(f"f_vals: {f_vals.shape}\n")
 
     output = A * f_vals
+    sys.stderr.write(f"initial output: {output}\n")
     #print("output_init", output)
     # print(f"output: {output}")
     # print(f"output shape: {output.shape}")
@@ -213,39 +280,149 @@ def compute_fd(n, nt, k, f, fpp_num): # new
     #if k == (nt-1) and k != 0:
     #    output = output[n:]   # good
 
+    # ***
+    # ***
+    # ***
 
-    if x_ind != 0 and x_ind != (sqrt(nt)-1) and y_ind != 0 and y_ind != (sqrt(nt)-1):  # mid thread
-        output = output[n:-n]
-    if x_ind == 0 and y_ind != 0 and y_ind != (sqrt(nt)-1): # wall on left
-        output = output
-    if x_ind == sqrt(nt) and y_ind != 0 and y_ind != (sqrt(nt)-1): # wall on right
-        output = output[:-n]
-    if y_ind == 0 and x_ind != 0 and x_ind != (sqrt(nt)-1): # wall on bottom
-        output = output[n:]
-    if y_ind == (sqrt(nt)-1) and x_ind != 0 and x_ind != (sqrt(nt)-1): # wall on top
-        output = output[n:]
-    if y_ind == (sqrt(nt)-1) and x_ind == (sqrt(nt)-1): # top right corner
-        output = output[n:]
-    if y_ind == 0 and x_ind == (sqrt(nt)-1): # bottom right corner
-        output = output[n:]
-    if y_ind == 0 and x_ind == 0: # bottom left corner
-        output = output[n:]
-    if y_ind == (sqrt(nt)-1) and x_ind == 0: # top left corner
-        output = output[n:]
+    num_elements_row = end_halo_x - start_halo_x
+    num_elements_column = end_halo_y - start_halo_y
+
+    sys.stderr.write(f"initial num elements row: {num_elements_row}\n")
+
+    # need to check for nt == 1
+    if nt == 1:
+        if k == 0:
+            sys.stderr.write(f"Running 1 Thread...\n")
+
+            # not needed -- finished
+            #output = output
+        else:
+            sys.stderr.write(f"ERROR: WRONG K VALUE FOR 1 THREAD!\n")
+            exit(99)
+    else:
+        if x_ind != 0 and x_ind != (dimension_length - 1) and y_ind != 0 and \
+                y_ind != (dimension_length-1):  # mid thread
+            # output = output[n:-n]
+
+            sys.stderr.write(f"Middle\n")
+
+            offset = [1, -1]
+            POSITION = "m"
+            #output = get_2d_case_output(offset, output, num_elements_row, "m")
+        if x_ind == 0 and y_ind != 0 and y_ind != (dimension_length - 1): #
+            # wall on left
+            #output = output
+
+            sys.stderr.write(f"Wall Left\n")
+
+            offset = [0, -1]
+            POSITION = "m"
+            #get_2d_case_output(offset, output, num_elements_row, "m")
+        if x_ind == (dimension_length - 1) and y_ind != 0 and y_ind != (
+                dimension_length - 1): # wall on right
+            #output = output[:-n]
+
+            sys.stderr.write(f"Wall Right\n")
+
+            offset = [1, 0]
+            POSITION = "m"
+            #get_2d_case_output(offset, output, num_elements_row, "m")
+        if y_ind == 0 and x_ind != 0 and x_ind != (dimension_length - 1): #
+            # wall on bottom
+            #output = output[n:]
+
+            sys.stderr.write(f"Wall Bottom\n")
+
+            offset = [1, -1]
+            POSITION = "b"
+            #get_2d_case_output(offset, output, num_elements_row, "b")
+        if y_ind == (dimension_length - 1) and x_ind != 0 \
+                and x_ind != (dimension_length - 1): # wall on top
+            #output = output[n:]
+
+            sys.stderr.write(f"Wall Top\n")
+
+            offset = [1, -1]
+            POSITION = "t"
+            #get_2d_case_output(offset, output, num_elements_row, "t")
+        if y_ind == (dimension_length - 1) and x_ind == (dimension_length - 1):
+            # top right corner
+            #output = output[n:]
+
+            sys.stderr.write(f"Top Right Corner\n")
+
+            offset = [1, 0]
+            POSITION = "t"
+            #get_2d_case_output(offset, output, num_elements_row, "t")
+        if y_ind == 0 and x_ind == (dimension_length - 1): # bottom right corner
+            #output = output[n:]
+
+            sys.stderr.write(f"Bottom Right Corner\n")
+
+            offset = [1, 0]
+            POSITION = "b"
+            #get_2d_case_output(offset, output, num_elements_row, "b")
+        if y_ind == 0 and x_ind == 0: # bottom left corner
+            #output = output[n:]
+
+            sys.stderr.write(f"Bottom Left Corner\n")
+
+            offset = [0, -1]
+            POSITION = "b"
+            #get_2d_case_output(offset, output, num_elements_row, "b")
+        if y_ind == (dimension_length - 1) and x_ind == 0: # top left corner
+            #output = output[n:]
+
+            sys.stderr.write(f"Top Left Corner\n")
+
+            offset = [0, -1]
+            POSITION = "t"
+            #get_2d_case_output(offset, output, num_elements_row, "t")
 
     #sys.stderr.write(f"start: {start}\n")
     #sys.stderr.write(f"end: {end}\n")
     #sys.stderr.write(f"output: {output}\n")
     #sys.stderr.write(f"output shape: {output.shape}\n")
 
+    if nt != 1:
+        output = get_2d_case_output(offset, output, num_elements_row, POSITION)
+
     # Task:
     # Set the output array
     # fpp_num = array((end - start, ))
     # print(f"shape fpp_num: {fpp_num.shape}")
 
-    fpp_num[(start*n):(end*n)] = output
+    final_num_elements_row = n // dimension_length
 
+    sys.stderr.write(f"final num elements row: {final_num_elements_row}\n")
+    sys.stderr.write(f"output length: {len(output)}\n")
+    sys.stderr.write(f"output: {output}\n")
 
+    for row_output, row_fpp in enumerate(range(start_y, end_y)):
+        sys.stderr.write(f"row_output: {row_output}, row_fpp: {row_fpp}\n")
+
+        start_output = row_output * final_num_elements_row
+        end_output = (row_output + 1) * final_num_elements_row
+
+        sys.stderr.write(f"start output: {start_output}\n")
+        sys.stderr.write(f"end output: {end_output}\n")
+
+        row_fpp_final = row_fpp * n
+        sys.stderr.write(f"row_fpp_final: {row_fpp_final}\n")
+
+        start_fpp = row_fpp_final + start_x
+        end_fpp = row_fpp_final + end_x
+
+        sys.stderr.write(f"fpp start: {start_fpp}\n")
+        sys.stderr.write(f"fpp end: {end_fpp}\n")
+
+        fpp_num[start_fpp:end_fpp] \
+            = output[start_output:end_output]
+
+    #sys.stderr.write(f"(after function call) fpp_num: {fpp_num}\n")
+
+    # need to change...
+    #fpp_num[(start*n):(end*n)] = output
 
 def fcn(x, y):
     '''
