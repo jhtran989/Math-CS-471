@@ -231,6 +231,10 @@ def fcnpp(x, y):
 
 
 def print_fpp_stderr(fpp, n):
+    """
+    For debug purposes
+    """
+    
     for row in range(n):
         for column in range(n):
             sys.stderr.write(f"{fpp[n * row + column]} ")
@@ -239,6 +243,10 @@ def print_fpp_stderr(fpp, n):
 
 
 def print_fpp(fpp, n):
+    """
+    For debug purposes
+    """
+    
     for row in range(n):
         for column in range(n):
             print(f"{fpp[n * row + column]}", end=" ")
@@ -250,7 +258,7 @@ if __name__ == "__main__":
     ##
     # Here are three problem size options for running.  The instructor has chosen these
     # for you.
-    option = 6
+    option = 5
     partition = -1
 
     if option == 1:
@@ -263,7 +271,7 @@ if __name__ == "__main__":
         # and for initial runs on CARC.
         # You may want to start with just num_threads=[1] and debug the serial case first.
         NN = 210 * arange(1, 6)
-        num_threads = [1]  # eventually include 2, 3
+        num_threads = [1, 2, 3]  # eventually include 2, 3
         partition = 1
     elif option == 3:
         # Choose this for code development and debugging on your laptop/lab machine
@@ -272,8 +280,8 @@ if __name__ == "__main__":
         num_threads = [1]  # eventually include 2,3
         partition = 1
     elif option == 4:  # our designated option for 2D partition
-        NN = array([12])
-        num_threads = [16]  # eventually include 9, 16
+        NN = array([6])
+        num_threads = [9]  # eventually include 9, 16
         partition = 2
     elif option == 5:
         NN = 210 * arange(1, 6)
@@ -343,10 +351,10 @@ if __name__ == "__main__":
                                              args=(n, nt, k, fcn, fpp_numeric)))
                     else:
                         #sys.stderr.write(f"Using 2D partition...")
-                        #FIXME: test sequentially first
                         t_list.append(Thread(target=compute_fd_2d,
                                              args=(n, nt, k, fcn, fpp_numeric)))
 
+                        # FIXME: test sequentially first
                         #compute_fd_2d(n, nt, k, fcn, fpp_numeric)
                     # t_list.append(Thread(target=<insert>, args=<insert tuple of arguments> ))
 
@@ -447,7 +455,11 @@ if __name__ == "__main__":
 
         # change to just option 2
         if option == 2 or option == 5:
+            #TODO: make separate dir for the error plots (1D and 2D partition)
+
             #print(timings)
+
+            error_dir = f"error_images_{partition}D/"
 
             # sys.stderr.write(f"error: {error}\n")
             # sys.stderr.write(f"NN: {NN}\n")
@@ -461,8 +473,11 @@ if __name__ == "__main__":
             pyplot.xlabel(r"$n$")
             pyplot.ylabel(r"$|e|_{L_2}$")
 
-            pyplot.savefig(f'error' + str(nt)
-                           + f'threads-' + f'{partition}D.png', dpi=500,
+            error_filename = \
+                f'error' + str(nt) + f'threads-' + f'{partition}D.png'
+            error_filepath = error_dir + error_filename
+
+            pyplot.savefig(error_filepath, dpi=500,
                            format='png',
                            bbox_inches='tight', pad_inches=0.0, )
             pyplot.show()

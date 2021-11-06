@@ -126,7 +126,8 @@ def compute_fd_2d(n, nt, k, f, fpp_num): # new
     # y[start:end] --> [0, 0.33]
     #start = int(k * (n / nt))
 
-    sys.stderr.write(f"--------------------------------------\n")
+    if DEBUG:
+        sys.stderr.write(f"--------------------------------------\n")
     
     dimension_length = int(sqrt(nt))
 
