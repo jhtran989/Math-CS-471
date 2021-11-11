@@ -2,7 +2,7 @@ from numpy import *
 from matplotlib import pyplot
 import matplotlib.animation as manimation
 import os, sys
-import ffmpeg
+#import ffmpeg
 
 # HW5 Skeleton 
 
@@ -89,7 +89,7 @@ def RHS(y, t, food_flag, alpha, gamma_1, gamma_2, kappa, rho, delta, y_total):
     numer = y - neighbors_coords
     F_repel = rho*sum((numer)/(numer**2 + delta))
 
-
+    print("y0", y_total[0])
     #
     # Task:  Fill this in by assigning values to f
     # f = n*2 vector sum of all components
@@ -108,10 +108,10 @@ N = 10
 
 # Task:  Experiment with the problem parameters, and understand how each parameter affects the system
 dt = (T - t0) / (nsteps-1.0)
-gamma_1 = 2.0
-gamma_2 = 8.0
-alpha = 0.4
-kappa = 4.0
+gamma_1 = 2.0 #2.0
+gamma_2 = 8.0 #8.0
+alpha = 1.5 #0.4
+kappa = 5.0 #4.0
 rho = 2.0
 delta = 0.5
 food_flag = 1   # food_flag == 0: C(x,y) = (0.0, 0.0)
@@ -124,8 +124,8 @@ flock_diam = zeros((nsteps,))
 RK4(RHS, y, (T-t0)/2, dt, food_flag, alpha, gamma_1, gamma_2, kappa, rho, delta)
 # Initialize the Movie Writer
 # --> The movie writing code has been done for you
-FFMpegWriter = manimation.writers['ffmpeg']
-writer = FFMpegWriter(fps=6)
+# FFMpegWriter = manimation.writers['ffmpeg']
+# writer = FFMpegWriter(fps=6)
 fig = pyplot.figure(0)
 pp, = pyplot.plot([],[], 'k+')
 rr, = pyplot.plot([],[], 'r+')
@@ -134,29 +134,51 @@ pyplot.ylabel(r'$Y$', fontsize='large')
 pyplot.xlim(-3,3)       # you may need to adjust this, if your birds fly outside of this box!
 pyplot.ylim(-3,3)       # you may need to adjust this, if your birds fly outside of this box!
 
+t = t0
+pp.set_data(y[1:,0], y[1:,1])
+rr.set_data(y[0,0], y[0,1])
+for i in range(20):
+    y = RK4(RHS, y, (T-t0)/2, dt, food_flag, alpha, gamma_1, gamma_2, kappa, rho, delta)
+    #flock_diam[step] = y
+    t += dt
 
-# Begin writing movie frames
-#with writer.saving(fig, "movie.mp4", dpi=1000):
+    pyplot.figure(i)
 
-    # First frame
-#     pp.set_data(y[1:,0], y[1:,1])
-#     rr.set_data(y[0,0], y[0,1])
-#     writer.grab_frame()
+    pp, = pyplot.plot([],[], 'k+')
+    rr, = pyplot.plot([],[], 'r+')
+    pp.set_data(y[:,0], y[:,1])
+    rr.set_data(y[0,0], y[0,1])
+    pyplot.xlabel(r'$X$', fontsize='large')
+    pyplot.ylabel(r'$Y$', fontsize='large')
+    pyplot.xlim(-3,3)       # you may need to adjust this, if your birds fly outside of this box!
+    pyplot.ylim(-3,3)       # you may need to adjust this, if your birds fly outside of this box!
+    pyplot.savefig('hw5_plt'+str(i)+'.png')
+
+
+#pyplot.show()
+
+
+# # Begin writing movie frames
+# with writer.saving(fig, "movie.mp4", dpi=1000):
 #
-#     t = t0
-#     for step in range(nsteps):
+#     # First frame
+#      pp.set_data(y[1:,0], y[1:,1])
+#      rr.set_data(y[0,0], y[0,1])
+#      writer.grab_frame()
 #
-#         # Task: Fill in the code for the next two lines
-#         y = RK4(...)
-#         flock_diam[step] = ...
-#         t += dt
+#      t = t0
+#      for step in range(nsteps):
 #
-#         # Movie frame
-#         pp.set_data(y[:,0], y[:,1])
-#         rr.set_data(y[0,0], y[0,1])
-#         writer.grab_frame()
+#          # Task: Fill in the code for the next two lines
+#          y = RK4(RHS, y, (T-t0)/2, dt, food_flag, alpha, gamma_1, gamma_2, kappa, rho, delta)
+#          #flock_diam[step] = y
+#          t += dt
+#
+#          # Movie frame
+#          pp.set_data(y[:,0], y[:,1])
+#          rr.set_data(y[0,0], y[0,1])
+#          writer.grab_frame()
 #
 #
-# # Task: Plot flock diameter
-# plot(..., flock_diam, ...)
-#
+#  # Task: Plot flock diameter
+# #plot(..., flock_diam, ...)
