@@ -6,7 +6,22 @@ import os, sys
 
 # HW5 Skeleton
 
-DEBUG = True
+DEBUG = False
+DIAMETER_DEBUG = False
+SMELLY_BIRD = True  # we set it as the second bird (index 1)
+PREDATOR = True
+
+LEADER_INDEX = 0
+SMELLY_BIRD_INDEX = 1
+
+kappa_smelly = 4.0
+rho_smelly = 3.0
+
+# Predator
+predator_location = random.rand(1, 2)
+print(f"size of predator location: {predator_location.shape}")
+print(f"predator location: {predator_location}")
+rho_predator = 4.0
 
 def RK4(f, y, t, dt, food_flag, alpha, gamma_1, gamma_2, kappa, rho, delta):
     '''food_flag, alpha, gamma_1, gamma_2, kappa, rho, delta)
@@ -134,7 +149,7 @@ def RHS(y, t, food_flag, alpha, gamma_1, gamma_2, kappa, rho, delta, y_total,
 
         #TODO: need to fix F_repel -- maybe the sum only gives a scalar...
         numer = y - neighbors_coords
-        F_repel = rho * sum((numer) / (numer ** 2 + delta))
+        F_repel = rho * sum(((numer) / (numer ** 2 + delta)), axis=0)
 
         f += F_flock + F_repel
 
@@ -143,6 +158,26 @@ def RHS(y, t, food_flag, alpha, gamma_1, gamma_2, kappa, rho, delta, y_total,
             print(f"numer: {numer}")
             print(f"F_repel: {F_repel}")
 
+    if SMELLY_BIRD:
+        if y_index == SMELLY_BIRD_INDEX:
+            F_center_smelly = kappa_smelly * (mean(y_total, axis=0) - y)
+
+            #F_smelly = gamma_1 * (C - y)
+            f += F_center_smelly
+        else:
+            # similar to the repelling force above, we apply the repelling of
+            # the 5 closest neighbors...
+            numer = y - y_total[SMELLY_BIRD_INDEX]
+            F_repel_smelly = rho_smelly * sum(((numer) / (numer ** 2 +
+                                                          delta)), axis=0)
+            f += F_repel_smelly
+
+    if PREDATOR:
+        numer = y - predator_location
+        F_repel_predator = rho_predator * sum(((numer) / (numer ** 2 +
+                                                      delta)), axis=0)
+        f += F_repel_predator
+
     return f
 
 if __name__ == "__main__":
@@ -150,10 +185,11 @@ if __name__ == "__main__":
     # Set up problem domain
     t0 = 0.0  # start time
     T = 10.0  # end time
+    t_mid = (t0 + T) / 2 # mid time
     nsteps = 50  # number of time steps
 
     # Task:  Experiment with N, number of birds
-    N = 10
+    N = 10  # 10, 30, 100
 
     # Task:  Experiment with the problem parameters, and understand how each parameter affects the system
     dt = (T - t0) / (nsteps - 1.0)
@@ -167,8 +203,8 @@ if __name__ == "__main__":
     # food_flag == 1: C(x,y) = (sin(alpha*t), cos(alpha*t))
 
     # Intialize problem
-    y = random.rand(N,
-                    2)  # This is the state vector of each Bird's position.  The k-th bird's position is (y[k,0], y[k,1])
+    y = random.rand(N, 2)  # This is the state vector of each Bird's
+    # position.  The k-th bird's position is (y[k,0], y[k,1])
     flock_diam = zeros((nsteps,))
 
     # RK4(RHS, y, (T - t0) / 2, dt, food_flag, alpha, gamma_1, gamma_2, kappa, rho,
@@ -181,6 +217,13 @@ if __name__ == "__main__":
     fig = pyplot.figure(0)
     pp, = pyplot.plot([], [], 'k+')
     rr, = pyplot.plot([], [], 'r+')
+
+    if SMELLY_BIRD:
+        smelly, = pyplot.plot([], [], 'y+')
+
+    if PREDATOR:
+        predator, = pyplot.plot([], [], 'b+')
+
     pyplot.xlabel(r'$X$', fontsize='large')
     pyplot.ylabel(r'$Y$', fontsize='large')
     pyplot.xlim(-3,
@@ -188,68 +231,25 @@ if __name__ == "__main__":
     pyplot.ylim(-3,
                 3)  # you may need to adjust this, if your birds fly outside of this box!
 
+    smelly_filename_addition = ""
+
+    if SMELLY_BIRD:
+        smelly_filename_addition = "_smelly"
+
+    if PREDATOR:
+        predator_filename_addition = "_predator"
+
     # Begin writing movie frames
-    with writer.saving(fig, "movie.mp4", dpi=1000):
+    with writer.saving(fig, f"movie_{N}{smelly_filename_addition}"
+                            f"{predator_filename_addition}.mp4",
+                       dpi=1000):
         # First frame
-        pp.set_data(y[1:, 0], y[1:, 1])
         rr.set_data(y[0, 0], y[0, 1])
-        writer.grab_frame()
+        if not SMELLY_BIRD:
+            pp.set_data(y[1:, 0], y[1:, 1])
+        else:
+            smelly.set_data(y[SMELLY_BIRD_INDEX, 0], y[SMELLY_BIRD_INDEX, 1])
+            pp.set_data(y[2:, 0], y[2:, 1])
 
-        t = t0
-        for step in range(nsteps):
-            # Task: Fill in the code for the next two lines
-
-            #FIXME: error when copied from above -- replaced the time variable
-            # with the current time t
-            y = RK4(RHS, y, t, dt, food_flag, alpha, gamma_1,
-                    gamma_2, kappa, rho, delta)
-
-            #TODO: implement flock_diam
-            #flock_diam[step] = ...
-            t += dt
-
-            # Movie frame
-            pp.set_data(y[:, 0], y[:, 1])
-            rr.set_data(y[0, 0], y[0, 1])
-            writer.grab_frame()
-
-    #TODO: implement flock_diam
-
-    # Task: Plot flock diameter
-    #plot(..., flock_diam, ...)
-
-    # Plots approach:
-    # fig = pyplot.figure(0)
-    # pp, = pyplot.plot([], [], 'k+')
-    # rr, = pyplot.plot([], [], 'r+')
-    # pyplot.xlabel(r'$X$', fontsize='large')
-    # pyplot.ylabel(r'$Y$', fontsize='large')
-    # pyplot.xlim(-3,
-    #             3)  # you may need to adjust this, if your birds fly outside of this box!
-    # pyplot.ylim(-3,
-    #             3)  # you may need to adjust this, if your birds fly outside of this box!
-    #
-    # t = t0
-    # pp.set_data(y[1:, 0], y[1:, 1])
-    # rr.set_data(y[0, 0], y[0, 1])
-    # for i in range(20):
-    #     y = RK4(RHS, y, (T - t0) / 2, dt, food_flag, alpha, gamma_1, gamma_2, kappa,
-    #             rho, delta)
-    #     # flock_diam[step] = y
-    #     t += dt
-    #
-    #     pyplot.figure(i)
-    #
-    #     pp, = pyplot.plot([], [], 'k+')
-    #     rr, = pyplot.plot([], [], 'r+')
-    #     pp.set_data(y[:, 0], y[:, 1])
-    #     rr.set_data(y[0, 0], y[0, 1])
-    #     pyplot.xlabel(r'$X$', fontsize='large')
-    #     pyplot.ylabel(r'$Y$', fontsize='large')
-    #     pyplot.xlim(-3,
-    #                 3)  # you may need to adjust this, if your birds fly outside of this box!
-    #     pyplot.ylim(-3,
-    #                 3)  # you may need to adjust this, if your birds fly outside of this box!
-    #     pyplot.savefig('hw5_plt' + str(i) + '.png')
-
-    # pyplot.show()
+        if PREDATOR:
+            predator.set_data(predator_location[0][0], predator_location[0][1])
