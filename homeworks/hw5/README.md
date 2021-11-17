@@ -1,16 +1,16 @@
 B# README
 ## Math/CS 471
-### Homework 4
+### Homework 5
 #### Michael Sands, John Tran
 
 - The homework report is in the directory
-`hw4/report` and is called `homework4.pdf`.
-- The code for `hw4` is in the directory `hw4/code`
-- The output files are in the directory `hw4/code_output`  
+`hw5/report` and is called `homework5.pdf`.
+- The code for `hw5` is in the directory `hw5/code`
+- The output files are in the directory `hw5/code_output`  
 - To run the code, type the following command in the command line:
 
 ```
-$ python hw4_final.py
+$ python hw5_final.py
 ```
 
 - For additional information about the code and changing some
