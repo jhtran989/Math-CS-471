@@ -121,7 +121,7 @@ def f(t,x,y):
 #                   N is the number of domain rows (excluding boundary rows)
 #                   (like 8 for a 8x8 grid), and comm is the MPI communicator. 
 ##
-def jacobi(A, b, x0, tol, maxiter, comm):
+def jacobi(A, b, x0, tol, maxiter, n_local, comm):
     '''
     Carry out the Jacobi method to invert A
 
@@ -134,6 +134,7 @@ def jacobi(A, b, x0, tol, maxiter, comm):
     Output
     ------
     x <array>       : Solution to A x = b
+    :param n_local:
     :param comm:
     '''
 
@@ -147,12 +148,16 @@ def jacobi(A, b, x0, tol, maxiter, comm):
     #print(f"Diagonal inverse: {D_inv}")
 
     # compute initial residual norm
-    r0_global = array([0.0])
-    r0 = ravel(b - A*x0)
-    r0 = array([dot(r0, r0)])
-    comm.Allreduce(r0, r0_global, op=MPI.SUM)
+    # r0_global = array([0.0])
+    # r0 = ravel(b - A*x0)
+    # r0 = array([dot(r0, r0)])
+    # comm.Allreduce(r0, r0_global, op=MPI.SUM)
+    #
+    # r0 = sqrt(r0_global[0])  # this is the init residual
 
-    r0 = sqrt(r0_global[0])  # this is the init residual
+    r0_vector = b - A*x0
+    r0_norm = norm(r0_vector, comm)
+
     #print(f"r0: {r0}")
 
     I = speye(A.shape[0], format='csr')
@@ -169,50 +174,174 @@ def jacobi(A, b, x0, tol, maxiter, comm):
         # Lecture 26, Slide 23
 
         # old
-        x[i+1] = (x[i] - (A*x[i])*D_inv) + D_inv*b
+        # x[i+1] = (x[i] - (A*x[i])*D_inv) + D_inv*b
+        x[i + 1] = jacobi_step(A, x[i], b, D_inv, n_local, comm)
 
-        rk_global = array([0.0])
-        rk = b - A*x[i+1]
-        # print(f"before ravel:")
-        #print(f"rk: {rk}")
-        # print(f"rk shape: {rk.shape}")
-        rk = ravel(rk)  # does nothing...
-        rk = array([dot(rk, rk)])
+        # rk_global = array([0.0])
+        #
+        # rk = b - A*x[i+1]
+        # # print(f"before ravel:")
+        # #print(f"rk: {rk}")
+        # # print(f"rk shape: {rk.shape}")
+        # rk = ravel(rk)  # does nothing...
+        # rk = array([dot(rk, rk)])
+        #
+        # comm.Allreduce(rk, rk_global, op=MPI.SUM)
+        #
+        # rk = sqrt(rk_global[0])  # this is the init residual
 
-        comm.Allreduce(rk, rk_global, op=MPI.SUM)
-
-        rk = sqrt(rk_global[0])  # this is the init residual
+        rk_vector = b - A*x[i+1]
+        rk_norm = norm(rk_vector, comm)
 
         # print(f"after ravel:")
         # print(f"rk: {rk}")
         # print(f"rk shape: {rk.shape}")
-        rk = sqrt(dot(rk, rk))
+        # rk = sqrt(dot(rk, rk))
         #print(f"rk: {rk}")
         last_i = i
 
         # print(f"r0: {r0}")
         # print(f"rk: {rk}")
-        if rk/r0 <= tol:
+        if rk_norm/r0_norm <= tol:
             if CONVERGENCE_CHECK:
                 print("did converge, i = ", i)
 
             break
 
     # Task: Print if Jacobi did not converge. In parallel, only rank 0 should print.
-    if rk/r0 > tol:
+    if rk_norm/r0_norm > tol:
         if CONVERGENCE_CHECK:
             print("did not converge")
 
     #print("x", x.shape)
-    return x[last_i+1:last_i+2] # this is good
+    #return x[last_i + 1:last_i + 2]
+
+    # return x[last_i+1:last_i+2] # this is good
+    if rank == 0:
+        return x[0:n_local]  # this is good
+    elif rank == (nprocs - 1):
+        return x[-n_local:]
+    else:
+        return x[n_local:-n_local]
 
 
-def matrix_vector(A, x, N, comm):
-    return None
+def matrix_vector(A, x, n_local, comm):
+    """
+    N is renamed to n_local
+
+    :param A:
+    :param x:
+    :param n_local:
+    :param comm:
+    :return:
+    """
+    # Send to bottom neighbor (if not rank 0)
+    if rank != 0:
+        if rank == (nprocs - 1):
+            comm.Send([x[-n_local:], MPI.DOUBLE], dest=rank + 1, tag=77)
+        else:
+            comm.Send([x[n_local:-n_local], MPI.DOUBLE], dest=rank + 1, tag=77)
+
+    # Task: Send to top neighbor (if not last rank)
+    if rank != (nprocs - 1):
+        if rank == 0:
+            comm.Send([x[:n_local], MPI.DOUBLE], dest=rank - 1, tag=77)
+        else:
+            comm.Send([x[n_local:-n_local], MPI.DOUBLE], dest=rank - 1, tag=77)
+
+    # Task: Receive from right neighbor (if not last rank)
+    # Task: receive from the top neighbor
+    if rank != 0:
+        if rank == (nprocs - 1):
+            comm.Recv([x[-n_local:], MPI.DOUBLE], source=rank - 1, tag=77)
+        else:
+            comm.Recv([x[n_local:-n_local], MPI.DOUBLE], source=rank - 1,
+                      tag=77)
+
+    # Task: receive from the bottom neighbor
+    if rank != (nprocs - 1):
+        if rank == 0:
+            comm.Recv([x[:n_local], MPI.DOUBLE], source=rank + 1, tag=77)
+        else:
+            comm.Recv([x[n_local:-n_local], MPI.DOUBLE], source=rank + 1,
+                      tag=77)
+
+    # (I - A*D_inv)*x
+    # A is G in this case
+    # x - (A*x)*D_inv
+    return A * x
 
 
-def norm(A, x, N, comm):
-    return None
+def jacobi_step(A, x, b, D_inv, n_local, comm):
+    """
+    Changed the function definition/prototype from matrix_vector(A, x, N,
+    comm) to compute the ENTIRE line, including b and D_inv and parameters
+
+    :param A:
+    :param x:
+    :param b:
+    :param D_inv:
+    :param n_local:
+    :param comm:
+    :return:
+    """
+    # communicate the values of x first (the x from the halo regions have the
+    # INCORRECT values in the local portion -- A gets cut off from the global)
+
+    # assume rank 0 is the top-most row and numbering goes down
+
+    # different lengths of x for the first and last processes (halo regions
+    # different from the others)
+    # --> Pay attention to the data-type
+
+    # Send to bottom neighbor (if not rank 0)
+    if rank != 0:
+        if rank == (nprocs - 1):
+            comm.Send([x[-n_local:], MPI.DOUBLE], dest=rank + 1, tag=77)
+        else:
+            comm.Send([x[n_local:-n_local], MPI.DOUBLE], dest=rank + 1, tag=77)
+
+    # Task: Send to top neighbor (if not last rank)
+    if rank != (nprocs - 1):
+        if rank == 0:
+            comm.Send([x[:n_local], MPI.DOUBLE], dest=rank - 1, tag=77)
+        else:
+            comm.Send([x[n_local:-n_local], MPI.DOUBLE], dest=rank - 1, tag=77)
+
+
+    # Task: Receive from right neighbor (if not last rank)
+    # Task: receive from the top neighbor
+    if rank != 0:
+        if rank == (nprocs - 1):
+            comm.Recv([x[-n_local:], MPI.DOUBLE], source=rank - 1, tag=77)
+        else:
+            comm.Recv([x[n_local:-n_local], MPI.DOUBLE], source=rank - 1,
+                      tag=77)
+
+    # Task: receive from the bottom neighbor
+    if rank != (nprocs - 1):
+        if rank == 0:
+            comm.Recv([x[:n_local], MPI.DOUBLE], source=rank + 1, tag=77)
+        else:
+            comm.Recv([x[n_local:-n_local], MPI.DOUBLE], source=rank + 1, tag=77)
+
+    # (I - A*D_inv)*x
+    # A is G in this case
+    # x - (A*x)*D_inv
+    return (x - (A * x) * D_inv) + D_inv * b
+
+
+def norm(r_vector, comm):
+    r_global_norm = array([0.0])
+    r_local_dot = array([dot(r_vector, r_vector)])
+
+    comm.Allreduce(r_local_dot, r_global_norm, op=MPI.SUM)
+    r_global_norm_scalar = sqrt(r_global_norm[0])
+
+    if rank == 0:
+        print(f"global norm: {r_global_norm_scalar}")
+
+    return r_global_norm_scalar
 
 
 def euler_backward(A, u, ht, f, g):
@@ -240,7 +369,7 @@ def euler_backward(A, u, ht, f, g):
     #Ainv.solve(eye(A.shape[0]) - ht*A)*(u+ht*f+ht*f)
     # Task: return solution from Jacobi, which takes a time-step forward in time by "ht"
     # jacobi(A, b, x0, tol, maxiter):
-    return jacobi(G, b, u, global_tol, global_maxiter, comm)
+    return jacobi(G, b, u, global_tol, global_maxiter, n_local, comm)
     #Ainv = splu(G)
     #return Ainv.solve(b)
     #return G_inv.solve() # exact solve from lab to check jacobi, if not fixed, than issue is not in jacobi
@@ -265,19 +394,21 @@ def matvec_check(A, X, Y, N, comm):
     rows (similar to compute_fd).  
     '''
 
-    nprocs = comm.size
-    my_rank = comm.Get_rank()
+    # Defined above (global variables)
+    # nprocs = comm.size
+    # my_rank = comm.Get_rank()
     
     o = ones((A.shape[0],))
-    oo = matrix_vector(A, o, N, comm)
-    if my_rank != 0:
+    oo = matrix_vector(A, o, n_local, comm)
+    if rank != 0:
         oo = oo[N:]
         X = X[N:]
         Y = Y[N:]
-    if my_rank != (nprocs-1):
+    if rank != (nprocs-1):
         oo = oo[:-N]
         X = X[:-N]
         Y = Y[:-N]
+
     import sys 
     for i in range(oo.shape[0]):
         sys.stderr.write("X,Y: (%1.2e, %1.2e),  Ouput: %1.2e\n"%(X[i], Y[i], oo[i]))
@@ -306,8 +437,8 @@ if __name__ == "__main__":
     N_values = array([8])  # 16
     T = 0.75  # 0.5
 
-    part_norm = array([1.0])
-    global_norm = zeros_like(part_norm)
+    # part_norm = array([1.0])
+    # global_norm = zeros_like(part_norm)
 
     # send and receive reference
     # comm.Send([data, MPI.INT], dest=1, tag=77)
@@ -371,11 +502,32 @@ if __name__ == "__main__":
         # Task: fill in the right commands for the spatial grid vector "pts"
         # Task in parallel: Adjust these computations so that you only compute the local grid
         #                   plus halo region.  Mimic HW4 here.
-        pts = linspace(h, 1-h, n)
-        X,Y = meshgrid(pts, pts)
+        n_local = n // nprocs
+
+        start = rank * n_local
+        end = (rank + 1) * n_local
+
+        # implement halo regions
+        if rank != 0:
+            start_halo = start - n_local
+        else:
+            start_halo = start
+        # start_halo = <start - 1, unless k == 0>
+        if rank != (nprocs - 1):
+            end_halo = end + n_local
+        else:
+            end_halo = end
+
+        start_Y = h + start_halo * h
+        end_Y = h + end_halo * h
+
+        X_pts = linspace(h, 1 - h, n)
+        Y_pts = linspace(start_Y, end_Y, n_local)
+        X,Y = meshgrid(X_pts, Y_pts)
+
         X = X.reshape(-1,)
         Y = Y.reshape(-1,)
-        print("pts", pts)
+        print("pts", Y_pts)
 
         # Declare spatial discretization matrix
         # Task: what dimension should A be?  remember the spatial grid is from
@@ -386,20 +538,18 @@ if __name__ == "__main__":
         # in HW4 poisson((end_halo - start_halo, n), format='csr')
 
         sizex = n
-        sizey = n
+        sizey = end_halo - start_halo
 
         A = poisson((sizey, sizex), format='csr')
 
         # Task: scale A by the grid size
         A = (1/h**2)*(A)
 
-
         # Declare initial condition
         #   This initial condition obeys the boundary condition.
         #print("X.shape", X.shape)
         #print("Y.shape", Y.shape)
-        u0 = uexact(0, X, Y)
-
+        u0_local = uexact(0, X, Y)
 
         # Declare storage
         # Task: Declare "u" and "ue".  What sizes should they be?  "u" will store the
@@ -411,49 +561,80 @@ if __name__ == "__main__":
 
         A_shape = int((A.shape[0]))
         print(A_shape)
-        u = zeros((nt, A_shape))
-        ue = zeros((nt, A_shape))
+        u_local = zeros((nt, A_shape))
+        ue_local = zeros((nt, A_shape))
 
-        u[0, :] = u0  # u0[-1:]  # starts at exact solution
-        ue[0, :] = u0  # [-1:]
+        # change index for columns (current values in middle, depending on
+        # where it is)
+        # if rank == 0:
+        #     u[0, 0:n_local] = u0_local  # u0[-1:]  # starts at exact solution
+        #     ue[0, 0:n_local] = u0_local  # [-1:]
+        # elif rank == (nprocs - 1):
+        #     u[0, :] = u0_local  # u0[-1:]  # starts at exact solution
+        #     ue[0, :] = u0_local  # [-1:]
+        # else:
+        #     u[0, :] = u0_local  # u0[-1:]  # starts at exact solution
+        #     ue[0, :] = u0_local  # [-1:]
+
+        u_local[0, :] = u0_local  # u0[-1:]  # starts at exact solution
+        ue_local[0, :] = u0_local  # [-1:]
 
         # section of u each process will get
-        u_local_size = A.shape[0] // nprocs
+        # u_local_size = A.shape[0]
+        #
+        # start_index = rank * u_local_size
+        # end_index = (rank + 1) * u_local_size
+        #
+        # u_local_0 = u0_local[start_index:end_index]
 
-        start_index = rank * u_local_size
-        end_index = (rank + 1) * u_local_size
-
-        u_local_0 = u0[start_index:end_index]
-
-        # Send to left neighbor (if not rank 0)
-        # --> Pay attention to the data-type
-        if rank != 0:
-            comm.Send([x_local[0:1], MPI.DOUBLE], dest=rank - 1, tag=77)
-
-        # Task: Send to right neighbor (if not last rank)
-        if rank != (num_ranks - 1):
-            comm.Send([x_local[-1:], MPI.DOUBLE], dest=rank + 1, tag=77)
-
-        # Task: Receive from right neighbor (if not last rank)
-        if rank != (num_ranks - 1):
-            comm.Recv([x_right[0:1], MPI.DOUBLE], source=rank + 1, tag=77)
-
-        # Task: Receive from left neighbor (if not rank 0)
-        if rank != 0:
-            comm.Recv([x_left[0:1], MPI.DOUBLE], source=rank - 1, tag=77)
+        # # Send to left neighbor (if not rank 0)
+        # # --> Pay attention to the data-type
+        # if rank != 0:
+        #     comm.Send([x_local[0:1], MPI.DOUBLE], dest=rank - 1, tag=77)
+        #
+        # # Task: Send to right neighbor (if not last rank)
+        # if rank != (num_ranks - 1):
+        #     comm.Send([x_local[-1:], MPI.DOUBLE], dest=rank + 1, tag=77)
+        #
+        # # Task: Receive from right neighbor (if not last rank)
+        # if rank != (num_ranks - 1):
+        #     comm.Recv([x_right[0:1], MPI.DOUBLE], source=rank + 1, tag=77)
+        #
+        # # Task: Receive from left neighbor (if not rank 0)
+        # if rank != 0:
+        #     comm.Recv([x_left[0:1], MPI.DOUBLE], source=rank - 1, tag=77)
 
         # Set initial condition
-        print("u", u.shape)
-        print("u0", u0)
+        print("u", u_local.shape)
+        print("u0", u0_local)
 
-        pyplot.figure(0)
-        pyplot.imshow(u[0, :].reshape(n, n), origin='lower',
-                      extent=(0, 1, 0, 1))
-        pyplot.colorbar()
-        pyplot.xlabel('X')
-        pyplot.ylabel('Y')
-        pyplot.title(f"Solution, i={0}")
-        pyplot.savefig(f"plots/solution_{0}.png")
+        u_global = zeros((nt, n ** 2))
+        u_global[0][:n_local] = u0_local[:]
+
+        ue_global = zeros((nt, n ** 2))
+        ue_global[0][:n_local] = u0_local[:]
+
+        if rank != 0:
+            if rank == (nprocs - 1):
+                comm.Send([u0_local[-n_local:], MPI.DOUBLE], dest=0, tag=77)
+            else:
+                comm.Send([u0_local[n_local:-n_local], MPI.DOUBLE], dest=0,
+                          tag=77)
+
+        if rank == 0:
+            for rank_num in range(1, nprocs):
+                comm.Recv([u_global[0][rank_num * n_local:(rank_num + 1) *
+                                                          n_local]],
+                          source=rank_num, tag=77)
+
+            pyplot.figure(0)
+            pyplot.imshow(u_global[0, :].reshape(n, n), origin='lower',
+                          extent=(0, 1, 0, 1))
+            pyplot.colorbar()
+            pyplot.xlabel('X')
+            pyplot.ylabel('Y')
+            pyplot.title(f"Solution, i={0}")
+            pyplot.savefig(f"plots/solution_{0}.png")
 
         # Testing harness for parallel part: Only comment-in and run for the smallest
         # problem size of 8 time points and an 8x8 grid
@@ -477,7 +658,7 @@ if __name__ == "__main__":
             # Task: We need to store the exact solution so that we can compute the error
             #print("ue.shape", ue.shape)
             #print("uexact.shape", uexact(t, X, Y).shape)
-            ue[i,:] = uexact(t, X, Y)
+            ue_local[i, :] = uexact(t, X, Y)
 
             # Task: Compute boundary contributions for the current time value of i*ht
             #       Different from HW4, need to account for numeric error, hence "1e-12" and not "0"
@@ -535,41 +716,57 @@ if __name__ == "__main__":
             # f(t,x,y)
             f_be = f(t, X, Y)
 
-
-            local_u = u[i-1,rank]
+            #local_u = u_local[i - 1, rank]
 
             # Lecture 26, slides 22 and 23 -- need (1/h**2) factor for g?
             # ASSUMING time step is SMALL (for u_i-1 to be a good guess...)
-            u[i,:] = euler_backward(A, u[i-1,:], ht, f_be, (1/h**2) * g)
+            u_local[i, :] = euler_backward(A, u_local[i - 1, :], ht, f_be, (1 / h ** 2) * g)
             # want f at
             # current time value
 
+            ue_global[i][:] = uexact(0, X, X)
+
             if TIME_DEBUG:
                 print("g", g)
-                print(f"u (backward euler): {u[i, :]}")
-                print(f"u (exact): {ue[i, :]}")
+                print(f"u (backward euler): {u_local[i, :]}")
+                print(f"u (exact): {ue_local[i, :]}")
 
-            pyplot.figure(i)
-            pyplot.imshow(u[i, :].reshape(n, n), origin='lower',
-                          extent=(0, 1, 0, 1))
-            pyplot.colorbar()
-            pyplot.xlabel('X')
-            pyplot.ylabel('Y')
-            pyplot.title(f"Solution, i={i}")
-            pyplot.savefig(f"plots/solution_{i}.png")
-            pyplot.close(pyplot.figure(i))
+            if rank != 0:
+                if rank == (nprocs - 1):
+                    comm.Send([u_local[i][-n_local:], MPI.DOUBLE], dest=0,
+                              tag=77)
+                else:
+                    comm.Send([u_local[i][n_local:-n_local], MPI.DOUBLE],
+                              dest=0,
+                              tag=77)
 
+            if rank == 0:
+                for rank_num in range(1, nprocs):
+                    comm.Recv([u_global[i][rank_num * n_local:(rank_num + 1) *
+                                                              n_local]],
+                              source=rank_num, tag=77)
 
-        # Compute L2-norm of the error at final time
-        print(f"final u (backward euler): {u[-1,:]}")
-        print(f"final u (exact): {ue[-1, :]}")
-        e = (u[-1,:] - ue[-1,:]).reshape(-1,)
-        enorm = linalg.norm(e) * h # Task: compute the L2 norm over space-time
-        # here.  In serial this is just one line.  In parallel...
-        # Parallel task: In parallel, write a helper function to compute the norm of "e" in parallel
+                pyplot.figure(i)
+                pyplot.imshow(u_global[i, :].reshape(n, n), origin='lower',
+                              extent=(0, 1, 0, 1))
+                pyplot.colorbar()
+                pyplot.xlabel('X')
+                pyplot.ylabel('Y')
+                pyplot.title(f"Solution, i={i}")
+                pyplot.savefig(f"plots/solution_{i}.png")
+                pyplot.close(pyplot.figure(i))
 
-        print("Nt, N, Error is:  " + str(nt) + ",  " + str(n) + ",  " + str(enorm))
-        error.append(enorm)
+        if rank == 0:
+            # Compute L2-norm of the error at final time
+            print(f"final u (backward euler): {u_global[-1, :]}")
+            print(f"final u (exact): {ue_global[-1, :]}")
+            e = (u_global[-1, :] - ue_global[-1, :]).reshape(-1, )
+            enorm = linalg.norm(e) * h # Task: compute the L2 norm over space-time
+            # here.  In serial this is just one line.  In parallel...
+            # Parallel task: In parallel, write a helper function to compute the norm of "e" in parallel
+
+            print("Nt, N, Error is:  " + str(nt) + ",  " + str(n) + ",  " + str(enorm))
+            error.append(enorm)
 
 
         # You can turn this on to visualize the solution.  Possibly helpful for debugging.
@@ -577,104 +774,106 @@ if __name__ == "__main__":
         # the solution from each processor before one single processor generates the graphic.
         # But, you can use the imshow command for your report graphics, as done below.
         ORIGINAL = False
-        if True:
-            pyplot.figure(-1)
-            pyplot.imshow(u[0,:].reshape(n,n), origin='lower', extent=(0, 1,
-                                                                        0, 1))
-            pyplot.colorbar()
-            pyplot.xlabel('X')
-            pyplot.ylabel('Y')
-            pyplot.title("Initial Condition")
-            pyplot.savefig("solution_initial.png")
+        if rank == 0:
+            if True:
+                pyplot.figure(-1)
+                pyplot.imshow(u_local[0, :].reshape(n, n), origin='lower', extent=(0, 1,
+                                                                                   0, 1))
+                pyplot.colorbar()
+                pyplot.xlabel('X')
+                pyplot.ylabel('Y')
+                pyplot.title("Initial Condition")
+                pyplot.savefig("solution_initial.png")
 
 
-            #pyplot.figure(10)
-            #pyplot.imshow(u[5,:].reshape(n,n))
-            #pyplot.colorbar()
-            #pyplot.xlabel('X')
-            #pyplot.ylabel('Y')
-            #pyplot.title("Solution at final time")
+                #pyplot.figure(10)
+                #pyplot.imshow(u[5,:].reshape(n,n))
+                #pyplot.colorbar()
+                #pyplot.xlabel('X')
+                #pyplot.ylabel('Y')
+                #pyplot.title("Solution at final time")
 
-            pyplot.figure(-12)
-            #print(f"Nt shape: {Nt_values.shape}")
-            print(f"mid time index: {Nt_values[0] // 2}")
+                pyplot.figure(-12)
+                #print(f"Nt shape: {Nt_values.shape}")
+                print(f"mid time index: {Nt_values[0] // 2}")
 
-            if ORIGINAL:
-                pyplot.imshow(u[Nt_values[0] // 2, :].reshape(n, n))
-            else:
-                pyplot.imshow(u[Nt_values[0] // 2,:].reshape(n,n), origin='lower', extent=(0, 1,
-                                                                        0, 1))
-            pyplot.colorbar()
-            pyplot.xlabel('X')
-            pyplot.ylabel('Y')
-            pyplot.title("Solution at mid time")
-            pyplot.savefig("solution_mid.png")
+                if ORIGINAL:
+                    pyplot.imshow(u_local[Nt_values[0] // 2, :].reshape(n, n))
+                else:
+                    pyplot.imshow(u_local[Nt_values[0] // 2, :].reshape(n, n), origin='lower', extent=(0, 1,
+                                                                                                       0, 1))
+                pyplot.colorbar()
+                pyplot.xlabel('X')
+                pyplot.ylabel('Y')
+                pyplot.title("Solution at mid time")
+                pyplot.savefig("solution_mid.png")
 
-            pyplot.figure(-99)
-            if ORIGINAL:
-                pyplot.imshow(
-                    uexact(t0 + (Nt_values[0] // 2) * ht, X, Y).reshape(n,
-                                                                        n))
-            else:
-                pyplot.imshow(uexact(t0 + (Nt_values[0] // 2) * ht, X, Y).reshape(n,
-                                                                           n), origin='lower', extent=(0, 1,
-                                                                        0, 1))
-            pyplot.colorbar()
-            pyplot.xlabel('X')
-            pyplot.ylabel('Y')
-            pyplot.title("Exact Solution at mid time")
-            pyplot.savefig("exact_mid.png")
+                pyplot.figure(-99)
+                if ORIGINAL:
+                    pyplot.imshow(
+                        uexact(t0 + (Nt_values[0] // 2) * ht, X, Y).reshape(n,
+                                                                            n))
+                else:
+                    pyplot.imshow(uexact(t0 + (Nt_values[0] // 2) * ht, X, Y).reshape(n,
+                                                                               n), origin='lower', extent=(0, 1,
+                                                                            0, 1))
+                pyplot.colorbar()
+                pyplot.xlabel('X')
+                pyplot.ylabel('Y')
+                pyplot.title("Exact Solution at mid time")
+                pyplot.savefig("exact_mid.png")
 
-            #import pdb; pdb.set_trace()
+                #import pdb; pdb.set_trace()
 
-            #pyplot.figure(11)
-            #pyplot.imshow(u[-22,:].reshape(n,n))
-            #pyplot.colorbar()
-            #pyplot.xlabel('X')
-            #pyplot.ylabel('Y')
-            #pyplot.title("Solution at final time")
+                #pyplot.figure(11)
+                #pyplot.imshow(u[-22,:].reshape(n,n))
+                #pyplot.colorbar()
+                #pyplot.xlabel('X')
+                #pyplot.ylabel('Y')
+                #pyplot.title("Solution at final time")
 
 
-            pyplot.figure(-3)
-            if ORIGINAL:
-                pyplot.imshow(u[-1, :].reshape(n, n))
-            else:
-                pyplot.imshow(u[-1,:].reshape(n,n), origin='lower', extent=(0, 1,
-                                                                        0, 1))
-            pyplot.colorbar()
-            pyplot.xlabel('X')
-            pyplot.ylabel('Y')
-            pyplot.title("Solution at final time")
-            pyplot.savefig("solution_final.png")
+                pyplot.figure(-3)
+                if ORIGINAL:
+                    pyplot.imshow(u_local[-1, :].reshape(n, n))
+                else:
+                    pyplot.imshow(u_local[-1, :].reshape(n, n), origin='lower', extent=(0, 1,
+                                                                                        0, 1))
+                pyplot.colorbar()
+                pyplot.xlabel('X')
+                pyplot.ylabel('Y')
+                pyplot.title("Solution at final time")
+                pyplot.savefig("solution_final.png")
 
-            pyplot.figure(-4)
-            if ORIGINAL:
-                pyplot.imshow(uexact(T, X, Y).reshape(n, n))
-            else:
-                pyplot.imshow(uexact(T,X,Y).reshape(n,n), origin='lower', extent=(0, 1,
-                                                                        0, 1))
-            pyplot.colorbar()
-            pyplot.xlabel('X')
-            pyplot.ylabel('Y')
-            pyplot.title("Exact Solution at final time")
-            pyplot.savefig("exact_final.png")
+                pyplot.figure(-4)
+                if ORIGINAL:
+                    pyplot.imshow(uexact(T, X, Y).reshape(n, n))
+                else:
+                    pyplot.imshow(uexact(T,X,Y).reshape(n,n), origin='lower', extent=(0, 1,
+                                                                            0, 1))
+                pyplot.colorbar()
+                pyplot.xlabel('X')
+                pyplot.ylabel('Y')
+                pyplot.title("Exact Solution at final time")
+                pyplot.savefig("exact_final.png")
 
-            #pyplot.show()
+                #pyplot.show()
 
 
     # Plot convergence
-    if True:
-        # When generating this plot in parallel, you should have only rank=0
-        # save the graphic to a .PNG
-        pyplot.figure(-999)
-        pyplot.loglog(1./N_values, 1./N_values**2, '-ok')
-        pyplot.loglog(1./N_values, array(error), '-sr')
-        pyplot.tick_params(labelsize='large')
-        pyplot.xlabel(r'Spatial $h$', fontsize='large')
-        pyplot.ylabel(r'$||e||_{L_2}$', fontsize='large')
-        pyplot.legend(['Ref Quadratic', 'Computed Error'], fontsize='large')
-        pyplot.show()
-        #pyplot.savefig('error.png', dpi=500, format='png', bbox_inches='tight', pad_inches=0.0,)
+    if rank == 0:
+        if True:
+            # When generating this plot in parallel, you should have only rank=0
+            # save the graphic to a .PNG
+            pyplot.figure(-999)
+            pyplot.loglog(1./N_values, 1./N_values**2, '-ok')
+            pyplot.loglog(1./N_values, array(error), '-sr')
+            pyplot.tick_params(labelsize='large')
+            pyplot.xlabel(r'Spatial $h$', fontsize='large')
+            pyplot.ylabel(r'$||e||_{L_2}$', fontsize='large')
+            pyplot.legend(['Ref Quadratic', 'Computed Error'], fontsize='large')
+            pyplot.show()
+            #pyplot.savefig('error.png', dpi=500, format='png', bbox_inches='tight', pad_inches=0.0,)
 
 
 
