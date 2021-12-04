@@ -344,7 +344,7 @@ def norm(r_vector, comm):
     return r_global_norm_scalar
 
 
-def euler_backward(A, u, ht, f, g):
+def euler_backward(A, u, ht, f, g, n_local_domain):
     '''
     Carry out backward Euler for one time step
     
@@ -359,6 +359,7 @@ def euler_backward(A, u, ht, f, g):
     Output
     ------
     u at the next time step
+    :param n_local_domain:
 
     '''
     #print("g", g)
@@ -369,7 +370,7 @@ def euler_backward(A, u, ht, f, g):
     #Ainv.solve(eye(A.shape[0]) - ht*A)*(u+ht*f+ht*f)
     # Task: return solution from Jacobi, which takes a time-step forward in time by "ht"
     # jacobi(A, b, x0, tol, maxiter):
-    return jacobi(G, b, u, global_tol, global_maxiter, n_local, comm)
+    return jacobi(G, b, u, global_tol, global_maxiter, n_local_domain, comm)
     #Ainv = splu(G)
     #return Ainv.solve(b)
     #return G_inv.solve() # exact solve from lab to check jacobi, if not fixed, than issue is not in jacobi
@@ -399,7 +400,7 @@ def matvec_check(A, X, Y, N, comm):
     # my_rank = comm.Get_rank()
     
     o = ones((A.shape[0],))
-    oo = matrix_vector(A, o, n_local, comm)
+    oo = matrix_vector(A, o, n_local_original, comm)
     if rank != 0:
         oo = oo[N:]
         X = X[N:]
@@ -502,19 +503,19 @@ if __name__ == "__main__":
         # Task: fill in the right commands for the spatial grid vector "pts"
         # Task in parallel: Adjust these computations so that you only compute the local grid
         #                   plus halo region.  Mimic HW4 here.
-        n_local = n // nprocs
+        n_local_original = n // nprocs
 
-        start = rank * n_local
-        end = (rank + 1) * n_local
+        start = rank * n_local_original
+        end = (rank + 1) * n_local_original
 
         # implement halo regions
         if rank != 0:
-            start_halo = start - n_local
+            start_halo = start - n_local_original
         else:
             start_halo = start
         # start_halo = <start - 1, unless k == 0>
         if rank != (nprocs - 1):
-            end_halo = end + n_local
+            end_halo = end + n_local_original
         else:
             end_halo = end
 
@@ -522,7 +523,7 @@ if __name__ == "__main__":
         end_Y = h + end_halo * h
 
         X_pts = linspace(h, 1 - h, n)
-        Y_pts = linspace(start_Y, end_Y, n_local)
+        Y_pts = linspace(start_Y, end_Y, n_local_original)
         X,Y = meshgrid(X_pts, Y_pts)
 
         X = X.reshape(-1,)
@@ -608,23 +609,28 @@ if __name__ == "__main__":
         print("u", u_local.shape)
         print("u0", u0_local)
 
+        if rank == 0 or rank == (nprocs - 1):
+            n_local_domain = A_shape // 2
+        else:
+            n_local_domain = A_shape // 3
+
         u_global = zeros((nt, n ** 2))
-        u_global[0][:n_local] = u0_local[:]
+        u_global[0][:n_local_domain] = u0_local[:]
 
         ue_global = zeros((nt, n ** 2))
-        ue_global[0][:n_local] = u0_local[:]
+        ue_global[0][:n_local_domain] = u0_local[:]
 
         if rank != 0:
             if rank == (nprocs - 1):
-                comm.Send([u0_local[-n_local:], MPI.DOUBLE], dest=0, tag=77)
+                comm.Send([u0_local[-n_local_domain:], MPI.DOUBLE], dest=0, tag=77)
             else:
-                comm.Send([u0_local[n_local:-n_local], MPI.DOUBLE], dest=0,
+                comm.Send([u0_local[n_local_domain:-n_local_domain], MPI.DOUBLE], dest=0,
                           tag=77)
 
         if rank == 0:
             for rank_num in range(1, nprocs):
-                comm.Recv([u_global[0][rank_num * n_local:(rank_num + 1) *
-                                                          n_local]],
+                comm.Recv([u_global[0][rank_num * n_local_domain:(rank_num + 1) *
+                                                                   n_local_domain]],
                           source=rank_num, tag=77)
 
             pyplot.figure(0)
@@ -720,7 +726,8 @@ if __name__ == "__main__":
 
             # Lecture 26, slides 22 and 23 -- need (1/h**2) factor for g?
             # ASSUMING time step is SMALL (for u_i-1 to be a good guess...)
-            u_local[i, :] = euler_backward(A, u_local[i - 1, :], ht, f_be, (1 / h ** 2) * g)
+            u_local[i, :] = euler_backward(A, u_local[i - 1, :], ht, f_be,
+                                           (1 / h ** 2) * g, n_local_domain)
             # want f at
             # current time value
 
@@ -733,17 +740,17 @@ if __name__ == "__main__":
 
             if rank != 0:
                 if rank == (nprocs - 1):
-                    comm.Send([u_local[i][-n_local:], MPI.DOUBLE], dest=0,
+                    comm.Send([u_local[i][-n_local_domain:], MPI.DOUBLE], dest=0,
                               tag=77)
                 else:
-                    comm.Send([u_local[i][n_local:-n_local], MPI.DOUBLE],
+                    comm.Send([u_local[i][n_local_domain:-n_local_domain], MPI.DOUBLE],
                               dest=0,
                               tag=77)
 
             if rank == 0:
                 for rank_num in range(1, nprocs):
-                    comm.Recv([u_global[i][rank_num * n_local:(rank_num + 1) *
-                                                              n_local]],
+                    comm.Recv([u_global[i][rank_num * n_local_domain:(rank_num + 1) *
+                                                                       n_local_domain]],
                               source=rank_num, tag=77)
 
                 pyplot.figure(i)
