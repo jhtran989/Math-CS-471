@@ -609,10 +609,13 @@ if __name__ == "__main__":
         print("u", u_local.shape)
         print("u0", u0_local)
 
-        if rank == 0 or rank == (nprocs - 1):
-            n_local_domain = A_shape // 2
+        if nprocs == 1:
+            n_local_domain = A_shape
         else:
-            n_local_domain = A_shape // 3
+            if rank == 0 or rank == (nprocs - 1):
+                n_local_domain = A_shape // 2
+            else:
+                n_local_domain = A_shape // 3
 
         u_global = zeros((nt, n ** 2))
         u_global[0][:n_local_domain] = u0_local[:]
