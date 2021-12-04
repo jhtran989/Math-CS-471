@@ -218,11 +218,11 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
 
     # return x[last_i+1:last_i+2] # this is good
     if rank == 0:
-        return x[0:n_local]  # this is good
+        return x[-1][0:n_local]  # this is good
     elif rank == (nprocs - 1):
-        return x[-n_local:]
+        return x[-1][-n_local:]
     else:
-        return x[n_local:-n_local]
+        return x[-1][n_local:-n_local]
 
 
 def matrix_vector(A, x, n_local, comm):
