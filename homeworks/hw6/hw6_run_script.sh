@@ -33,6 +33,8 @@ tau_trace=0
 num_elements_one=1000
 num_elements_ten=10000
 
+poisson_python="poisson.py"
+
 parallel_error_dir="parallel_error/"
 parallel_error_script="hw6_parallel_error.pbs"
 parallel_error_python="hw6_parallel_final.py"
@@ -50,6 +52,7 @@ function run_parallel_error_script() {
 	
 	# copy python script to current dir
 	cp ${up}${parallel_error_python} ${parallel_error_python}
+	cp ${up}${poisson_python} ${poisson_python}
 	
 	qsub ${parallel_error_script}
 }
