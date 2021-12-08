@@ -6,17 +6,9 @@ from poisson import poisson
 from scipy.sparse import eye as speye
 from scipy.sparse.linalg import splu
 
-import os
-
 
 global_maxiter = 400  # go through code and refactor
-global_tol = 1e-15  # 1e-10
-
-# Plots Stuff
-serial_root = f"serial/"
-serial_plots_dir = f"{serial_root}plots/"
-
-os.makedirs(serial_plots_dir, exist_ok=True)
+global_tol = 1e-10  # 1e-10
 
 
 '''
@@ -88,8 +80,8 @@ os.makedirs(serial_plots_dir, exist_ok=True)
 # Declare the problem
 def uexact(t,x,y):
     # Task: fill in exact solution
-    return sin(pi*t)*sin(pi*x)*sin(pi*y) # this is the exact solution
-    #return cos(pi*t)*cos(pi*x)*cos(pi*y)
+    #return sin(pi*t)*sin(pi*x)*sin(pi*y) # this is the exact solution
+    return cos(pi*t)*cos(pi*x)*cos(pi*y)
     #return (t-0.9)*(x**2)*(y**2)
 
 def f(t,x,y):
@@ -97,9 +89,9 @@ def f(t,x,y):
     # This should equal u_t - u_xx - u_yy
     
     # Task: fill in forcing term
-    return pi*(cos(pi*t))*sin(pi*x)*sin(pi*y) + 2*pi*pi*uexact(t, x, y)
+    #return pi*(cos(pi*t))*sin(pi*x)*sin(pi*y) + 2*pi*pi*uexact(t, x, y)
     # this is f, change for new cos function
-    #return pi*(-sin(pi*t))*cos(pi*x)*cos(pi*y) + 2*pi*pi*uexact(t, x, y)
+    return pi*(-sin(pi*t))*cos(pi*x)*cos(pi*y) + 2*pi*pi*uexact(t, x, y)
     #return 1 - (((t - 0.9) * 2 * (y ** 2)) + ((t - 0.9) * 2 * (x ** 2)))
 # try commenting out and using sin sin sin because it has zero boundary conditions
 # issue might be with x in backward euler
@@ -300,22 +292,10 @@ if __name__ == "__main__":
     #N_values = array([8, 16, 32, 64 ])
     #T = 0.5
 
-    # Changed for our special case (second function above)
-    # Nt_values = array([12 * (4 ** i) for i in range(4)])  # 8*4 -> 100
-    # N_values = array([8 * (2 ** i) for i in range(4)])  # 16
-    #
-    # print(f"N time values: {Nt_values}")
-    # print(f"N values: {N_values}")
-
     # One very small problem for debugging
-    Nt_values = array([8])  # 8*4 -> 100
-    N_values = array([8])  # 16
-    T = 0.5  # 0.5
-
-    # Changed for our special case (second function above)
-    # Nt_values = array([12 * (4 ** 2)]) # 8*4 -> 100
-    # N_values = array([8 * (2 ** 2)])  # 16
-    # T = 0.75  # 0.5
+    Nt_values = array([100]) # 8*4 -> 100
+    N_values = array([4])  # 16
+    T = 0.5
 
     # Parallel Task: Change T and the problem sizes for the weak and strong scaling studies
     #
@@ -428,7 +408,7 @@ if __name__ == "__main__":
         pyplot.xlabel('X')
         pyplot.ylabel('Y')
         pyplot.title(f"Solution, i={0}")
-        pyplot.savefig(f"{serial_plots_dir}solution_{0}.png")
+        pyplot.savefig(f"plots/solution_{0}.png")
 
         # Testing harness for parallel part: Only comment-in and run for the smallest
         # problem size of 8 time points and an 8x8 grid
@@ -528,7 +508,7 @@ if __name__ == "__main__":
             pyplot.xlabel('X')
             pyplot.ylabel('Y')
             pyplot.title(f"Solution, i={i}")
-            pyplot.savefig(f"{serial_plots_dir}solution_{i}.png")
+            pyplot.savefig(f"plots/solution_{i}.png")
             pyplot.close(pyplot.figure(i))
 
 
@@ -557,7 +537,7 @@ if __name__ == "__main__":
             pyplot.xlabel('X')
             pyplot.ylabel('Y')
             pyplot.title("Initial Condition")
-            pyplot.savefig(f"{serial_root}solution_initial.png")
+            pyplot.savefig("solution_initial.png")
 
 
             #pyplot.figure(10)
@@ -580,7 +560,7 @@ if __name__ == "__main__":
             pyplot.xlabel('X')
             pyplot.ylabel('Y')
             pyplot.title("Solution at mid time")
-            pyplot.savefig(f"{serial_root}solution_mid.png")
+            pyplot.savefig("solution_mid.png")
 
             pyplot.figure(-99)
             if ORIGINAL:
@@ -595,7 +575,7 @@ if __name__ == "__main__":
             pyplot.xlabel('X')
             pyplot.ylabel('Y')
             pyplot.title("Exact Solution at mid time")
-            pyplot.savefig(f"{serial_root}exact_mid.png")
+            pyplot.savefig("exact_mid.png")
 
             #import pdb; pdb.set_trace()
 
@@ -617,7 +597,7 @@ if __name__ == "__main__":
             pyplot.xlabel('X')
             pyplot.ylabel('Y')
             pyplot.title("Solution at final time")
-            pyplot.savefig(f"{serial_root}solution_final.png")
+            pyplot.savefig("solution_final.png")
 
             pyplot.figure(-4)
             if ORIGINAL:
@@ -629,7 +609,7 @@ if __name__ == "__main__":
             pyplot.xlabel('X')
             pyplot.ylabel('Y')
             pyplot.title("Exact Solution at final time")
-            pyplot.savefig(f"{serial_root}exact_final.png")
+            pyplot.savefig("exact_final.png")
 
             #pyplot.show()
 
@@ -645,14 +625,6 @@ if __name__ == "__main__":
         pyplot.xlabel(r'Spatial $h$', fontsize='large')
         pyplot.ylabel(r'$||e||_{L_2}$', fontsize='large')
         pyplot.legend(['Ref Quadratic', 'Computed Error'], fontsize='large')
-
-        # TODO: save error plot -- change to tight for final...
-        pyplot.savefig(f'{serial_root}error.png', dpi=500, format='png',
-                       pad_inches=0.0, )
-        # pyplot.savefig(f'{serial_root}error.png', dpi=500, format='png',
-        #                bbox_inches='tight', pad_inches=0.0,)
-
-        # TODO: comment out the show plots for final...
         pyplot.show()
         #pyplot.savefig('error.png', dpi=500, format='png', bbox_inches='tight', pad_inches=0.0,)
 
