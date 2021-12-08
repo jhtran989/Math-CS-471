@@ -57,6 +57,9 @@ function run_parallel_error_script() {
 	cp ${up}${parallel_error_python} ${parallel_error_python}
 	cp ${up}${poisson_python} ${poisson_python}
 	
+	# escape '$' with '\' since there are some variables only seen in the .pbs script
+	sed -i "81 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_error_python}"
+	
 	qsub ${parallel_error_script}
 }
 
@@ -115,7 +118,7 @@ while getopts "p:" args; do
 		run_script
 		exit;;
 	p)
-		choice=${OPTARG}
+		num_processes=${OPTARG}
 		echo "============================================================================================="
 		echo "Executing parallel algorithm to create the solution/error plot"
 		echo "============================================================================================="

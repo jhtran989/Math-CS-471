@@ -1,6 +1,6 @@
 import numpy
 from numpy import *
-from matplotlib import pyplot 
+from matplotlib import pyplot
 from poisson import poisson
 # speye generates a sparse identity matrix
 from scipy.sparse import eye as speye
@@ -9,7 +9,6 @@ from scipy.sparse.linalg import splu
 from mpi4py import MPI
 import os
 import sys
-
 
 global_maxiter = 400  # go through code and refactor
 global_tol = 1e-15  # 1e-10
@@ -37,10 +36,9 @@ JACOBI_DEBUG = False
 INITIALIZATION_DEBUG = False
 FINAL_DEBUG = False
 
-
 '''
     # Problem Preliminary: MPI cheat sheet
-    
+
     # For the later parallel part, you'll need to use MPI. 
     # Here are the most useful commands. 
 
@@ -69,15 +67,15 @@ FINAL_DEBUG = False
     # The result in global_norm will be the total number of processors
     from scipy import *
     from mpi4py import MPI
-     
+
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
-     
+
     part_norm = array([1.0])
     global_norm = zeros_like(part_norm) 
-     
+
     comm.Allreduce(part_norm, global_norm, op=MPI.SUM)
-     
+
     if (rank == 0):
         print(global_norm)
 '''
@@ -96,50 +94,54 @@ FINAL_DEBUG = False
 # which in turn, implies a forcing term of f, where
 # f(t,x,y) = ...
 #
-# an initial condition of 
+# an initial condition of
 # u(t=0,x,y) = ...
 #
-# and a boundary condition in space when (x,y) is on the boundary of 
+# and a boundary condition in space when (x,y) is on the boundary of
 # g(t,x,y) = u(t,x,y) = ...
 #
 ##
 
 # Declare the problem
-def uexact(t,x,y):
+def uexact(t, x, y):
     # Task: fill in exact solution
-    #return sin(pi*t)*sin(pi*x)*sin(pi*y) # this is the exact solution
-    return cos(pi*t)*cos(pi*x)*cos(pi*y)
-    #return (t-0.9)*(x**2)*(y**2)
+    # return sin(pi*t)*sin(pi*x)*sin(pi*y) # this is the exact solution
+    return cos(pi * t) * cos(pi * x) * cos(pi * y)
+    # return (t-0.9)*(x**2)*(y**2)
 
-def f(t,x,y):
+
+def f(t, x, y):
     # Forcing term
     # This should equal u_t - u_xx - u_yy
-    
+
     # Task: fill in forcing term
-    #return pi*(cos(pi*t))*sin(pi*x)*sin(pi*y) + 2*pi*pi*uexact(t, x, y)
+    # return pi*(cos(pi*t))*sin(pi*x)*sin(pi*y) + 2*pi*pi*uexact(t, x, y)
     # this is f, change for new cos function
-    return pi*(-sin(pi*t))*cos(pi*x)*cos(pi*y) + 2*pi*pi*uexact(t, x, y)
-    #return 1 - (((t - 0.9) * 2 * (y ** 2)) + ((t - 0.9) * 2 * (x ** 2)))
+    return pi * (-sin(pi * t)) * cos(pi * x) * cos(
+        pi * y) + 2 * pi * pi * uexact(t, x, y)
+    # return 1 - (((t - 0.9) * 2 * (y ** 2)) + ((t - 0.9) * 2 * (x ** 2)))
+
+
 # try commenting out and using sin sin sin because it has zero boundary conditions
 # issue might be with x in backward euler
 # issue in scaling
 # check g, should be 0
 
 ##
-# Task in serial: Implement Jacobi 
+# Task in serial: Implement Jacobi
 
 # Task in parallel: Extend Jacobi to parallel (as described below), with a
-#                   parallel matrix-vector product and parallel vector norm.  
-#                   It is suggested to write separate subroutines for the 
-#                   parallel norm and the parallel matrix-vector product, as 
+#                   parallel matrix-vector product and parallel vector norm.
+#                   It is suggested to write separate subroutines for the
+#                   parallel norm and the parallel matrix-vector product, as
 #                   this will make your code much, much easier to debug.
 #
-#                   For instance, the instructor wrote a routine 
+#                   For instance, the instructor wrote a routine
 #                   "matrix_vector()" which computes A*x with an interface
 #                          matrix_vector(A, x, N, comm)
 #                   where A is the matrix, x is the vector to multiply,
 #                   N is the number of domain rows (excluding boundary rows)
-#                   (like 8 for a 8x8 grid), and comm is the MPI communicator. 
+#                   (like 8 for a 8x8 grid), and comm is the MPI communicator.
 ##
 def jacobi(A, b, x0, tol, maxiter, n_local, comm):
     '''
@@ -164,9 +166,9 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
 
     # This useful function returns an array containing diag(A)
     D = A.diagonal()
-    #print(f"Diagonal: {D}")
-    D_inv = 1/D    #linalg.inv(D)
-    #print(f"Diagonal inverse: {D_inv}")
+    # print(f"Diagonal: {D}")
+    D_inv = 1 / D  # linalg.inv(D)
+    # print(f"Diagonal inverse: {D_inv}")
 
     # compute initial residual norm
     # r0_global = array([0.0])
@@ -176,18 +178,18 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
     #
     # r0 = sqrt(r0_global[0])  # this is the init residual
 
-    r0_vector = b - A*x0
+    r0_vector = b - A * x0
     r0_norm = norm(r0_vector, comm)
 
-    #print(f"r0: {r0}")
+    # print(f"r0: {r0}")
 
     I = speye(A.shape[0], format='csr')
-    # Start Jacobi iterations 
+    # Start Jacobi iterations
     # Task in serial: implement Jacobi method and halting tolerance based on the residual norm
-    
-    # Task in parallel: extend the matrix-vector multiply to the parallel setting.  
+
+    # Task in parallel: extend the matrix-vector multiply to the parallel setting.
     #                   Additionally, you'll need to compute a norm of the residual in parallel.
-    x = zeros((maxiter+1, A.shape[0]))  # only need first and last
+    x = zeros((maxiter + 1, A.shape[0]))  # only need first and last
     x[0] = x0
     last_i = 0
     for i in range(maxiter):
@@ -214,31 +216,31 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
         if CONVERGENCE_CHECK:
             print(f"Jacobi iteration: {i}")
 
-        rk_vector = b - A*x[i+1]
+        rk_vector = b - A * x[i + 1]
         rk_norm = norm(rk_vector, comm)
 
         # print(f"after ravel:")
         # print(f"rk: {rk}")
         # print(f"rk shape: {rk.shape}")
         # rk = sqrt(dot(rk, rk))
-        #print(f"rk: {rk}")
+        # print(f"rk: {rk}")
         last_i = i
 
         # print(f"r0: {r0}")
         # print(f"rk: {rk}")
-        if rk_norm/r0_norm <= tol:
+        if rk_norm / r0_norm <= tol:
             if CONVERGENCE_CHECK:
                 print("did converge, i = ", i)
 
             break
 
     # Task: Print if Jacobi did not converge. In parallel, only rank 0 should print.
-    if rk_norm/r0_norm > tol:
+    if rk_norm / r0_norm > tol:
         if CONVERGENCE_CHECK:
             print("did not converge")
 
-    #print("x", x.shape)
-    #return x[last_i + 1:last_i + 2]
+    # print("x", x.shape)
+    # return x[last_i + 1:last_i + 2]
 
     # return x[last_i+1:last_i+2] # this is good
     if rank == 0:
@@ -366,7 +368,7 @@ def norm(r_vector, comm):
 def euler_backward(A, u, ht, f, g, n_local_domain):
     '''
     Carry out backward Euler for one time step
-    
+
     Input
     -----
     A <CSR matrix>  : Discretization matrix of Poisson operator
@@ -381,18 +383,18 @@ def euler_backward(A, u, ht, f, g, n_local_domain):
     :param n_local_domain:
 
     '''
-    #print("g", g)
+    # print("g", g)
     # Task: Form the system matrix for backward Euler
     I = speye(A.shape[0], format='csr')
-    G = I - ht*A
-    b = u + ht*g + ht*f # G*u # PP 26 pg 22   fix this
-    #Ainv.solve(eye(A.shape[0]) - ht*A)*(u+ht*f+ht*f)
+    G = I - ht * A
+    b = u + ht * g + ht * f  # G*u # PP 26 pg 22   fix this
+    # Ainv.solve(eye(A.shape[0]) - ht*A)*(u+ht*f+ht*f)
     # Task: return solution from Jacobi, which takes a time-step forward in time by "ht"
     # jacobi(A, b, x0, tol, maxiter):
     return jacobi(G, b, u, global_tol, global_maxiter, n_local_domain, comm)
-    #Ainv = splu(G)
-    #return Ainv.solve(b)
-    #return G_inv.solve() # exact solve from lab to check jacobi, if not fixed, than issue is not in jacobi
+    # Ainv = splu(G)
+    # return Ainv.solve(b)
+    # return G_inv.solve() # exact solve from lab to check jacobi, if not fixed, than issue is not in jacobi
 
 
 # Helper function provided by instructor for debugging.  See how matvec_check
@@ -402,12 +404,12 @@ def matvec_check(A, X, Y, N, comm, h):
     This function runs
 
        (h**2)*A*ones()
-    
-    which should yield an output that is zero for interior points, 
+
+    which should yield an output that is zero for interior points,
     -1 for points next to a Wall, and -2 for the four corner points
-    
+
     All the results are printed to the screen.
-    
+
     Further, it is assumed that you have a function called "matrix_vector()"
     that conforms to the interface described above for the Jacobi routine.  It
     is assumed that the results of matrix_vector are only accurate for non-halo
@@ -422,7 +424,7 @@ def matvec_check(A, X, Y, N, comm, h):
     # Defined above (global variables)
     # nprocs = comm.size
     # my_rank = comm.Get_rank()
-    
+
     o = ones((A.shape[0],))
 
     # created a separate matrix_vector_plain
@@ -434,16 +436,17 @@ def matvec_check(A, X, Y, N, comm, h):
         oo = oo[N:]
         X = X[N:]
         Y = Y[N:]
-    if rank != (nprocs-1):
+    if rank != (nprocs - 1):
         oo = oo[:-N]
         X = X[:-N]
         Y = Y[:-N]
 
     # move import to the top of file
-    #import sys
+    # import sys
     for i in range(oo.shape[0]):
         sys.stderr.write(f"rank: {rank}\n")
-        sys.stderr.write("X,Y: (%1.2e, %1.2e),  Ouput: %1.2e\n"%(X[i], Y[i], oo[i]))
+        sys.stderr.write(
+            "X,Y: (%1.2e, %1.2e),  Ouput: %1.2e\n" % (X[i], Y[i], oo[i]))
 
 
 # def matrix_vector_plain(A, x, n_local, comm):
@@ -466,7 +469,7 @@ if __name__ == "__main__":
     # Use these problem sizes for your error convergence studies
     # Nt_values = array([8, 8*4, 8*4*4, 8*4*4*4])
     # N_values = array([8, 16, 32, 64 ])
-    #T = 0.5
+    # T = 0.5
 
     # Changed for our special case (second function above)
     Nt_values = array([12 * (4 ** i) for i in range(4)])  # 8*4 -> 100
@@ -496,7 +499,7 @@ if __name__ == "__main__":
     # comm.Send([data, MPI.INT], dest=1, tag=77)
     # comm.Recv([data, MPI.INT], source=0, tag=77)
 
-    #comm.Allreduce(part_norm, global_norm, op=MPI.SUM)
+    # comm.Allreduce(part_norm, global_norm, op=MPI.SUM)
 
     # if (rank == 0):
     #     print(global_norm)
@@ -530,11 +533,11 @@ if __name__ == "__main__":
 
         # Declare time step size
         t0 = 0.0
-        ht = (T - t0)/float(nt-1)
+        ht = (T - t0) / float(nt - 1)
 
         # Declare spatial grid size.  Note that we divide by (n + 1) because we are
         # accounting for the boundary points, i.e., we really have n+2 total points
-        h = 1.0 / (n+1.0)
+        h = 1.0 / (n + 1.0)
 
         # Task in parallel:
         # Compute which portion of the spatial domain the current MPI rank owns,
@@ -551,7 +554,6 @@ if __name__ == "__main__":
         #    end = int(....)
         #    start_halo = int(....)
         #    end_halo = int(....)
-
 
         # Remember, we assume a Dirichlet boundary condition, which simplifies
         # things a bit.  Thus, we only want a spatial grid from
@@ -587,10 +589,10 @@ if __name__ == "__main__":
         # IMPORTANT (n+2 points, but only n+1 SPACINGS)
         # for 1 process, end = h and end_Y = h + n * h = h * (n + 1)...
 
-        X,Y = meshgrid(X_pts, Y_pts)
+        X, Y = meshgrid(X_pts, Y_pts)
 
-        X = X.reshape(-1,)
-        Y = Y.reshape(-1,)
+        X = X.reshape(-1, )
+        Y = Y.reshape(-1, )
 
         if INITIALIZATION_DEBUG:
             print("pts", Y_pts)
@@ -617,12 +619,12 @@ if __name__ == "__main__":
         A = poisson((sizey, sizex), format='csr')
 
         # Task: scale A by the grid size
-        A = (1/h**2)*(A)
+        A = (1 / h ** 2) * (A)
 
         # Declare initial condition
         #   This initial condition obeys the boundary condition.
-        #print("X.shape", X.shape)
-        #print("Y.shape", Y.shape)
+        # print("X.shape", X.shape)
+        # print("Y.shape", Y.shape)
         u0_local = uexact(0, X, Y)
 
         # Declare storage
@@ -630,8 +632,8 @@ if __name__ == "__main__":
         #       numerical solution, and "ue" will store the exact solution.
         # Task in parallel: Adjust the sizes to be only for this processor's
         #                   local portion of the domain.
-        #print("maxiter", maxiter)
-        #print("A.size[0]", A.shape[0])
+        # print("maxiter", maxiter)
+        # print("A.size[0]", A.shape[0])
 
         A_shape = int((A.shape[0]))
 
@@ -725,19 +727,24 @@ if __name__ == "__main__":
         # same indexing with global and local ONLY on rank 0
         if rank == 0:
             u_global = zeros((nt, n ** 2))
-            u_global[0][start_domain_index:end_domain_index] = u0_local[start_domain_index:end_domain_index]
+            u_global[0][start_domain_index:end_domain_index] = u0_local[
+                                                               start_domain_index:end_domain_index]
 
             ue_global = zeros((nt, n ** 2))
-            ue_global[0][start_domain_index:end_domain_index] = u0_local[start_domain_index:end_domain_index]
+            ue_global[0][start_domain_index:end_domain_index] = u0_local[
+                                                                start_domain_index:end_domain_index]
 
         # communication only with more than 1 processes...
         if nprocs > 1:
             if rank != 0:
                 if rank == (nprocs - 1):
-                    comm.Send([u0_local[-n_local_domain:], MPI.DOUBLE], dest=0, tag=77)
-                else:
-                    comm.Send([u0_local[n_local_domain:-n_local_domain], MPI.DOUBLE], dest=0,
+                    comm.Send([u0_local[-n_local_domain:], MPI.DOUBLE], dest=0,
                               tag=77)
+                else:
+                    comm.Send(
+                        [u0_local[n_local_domain:-n_local_domain], MPI.DOUBLE],
+                        dest=0,
+                        tag=77)
 
             if rank == 0:
                 for rank_num in range(1, nprocs):
@@ -763,14 +770,14 @@ if __name__ == "__main__":
         # problem size of 8 time points and an 8x8 grid
         #   - Assumes specific structure to your mat-vec multiply routine
         #    (described above in comments)
-        #matvec_check( (h**2)*A, X, Y, n-2, comm)
+        # matvec_check( (h**2)*A, X, Y, n-2, comm)
 
         TIME_DEBUG = False
-        #t = t0
+        # t = t0
 
         # Run time-stepping over "nt" time points
         for i in range(1, nt):
-            t = t0 + i*ht
+            t = t0 + i * ht
             # ERROR - DON'T use t0 (only initial iteration)
 
             if TIME_DEBUG:
@@ -779,8 +786,8 @@ if __name__ == "__main__":
                 print("i (time)", i)
 
             # Task: We need to store the exact solution so that we can compute the error
-            #print("ue.shape", ue.shape)
-            #print("uexact.shape", uexact(t, X, Y).shape)
+            # print("ue.shape", ue.shape)
+            # print("uexact.shape", uexact(t, X, Y).shape)
 
             # print(f"rank: {rank}")
             # print(f"A shape: {A_shape}")
@@ -794,11 +801,11 @@ if __name__ == "__main__":
             # Task: Compute boundary contributions for the current time value of i*ht
             #       Different from HW4, need to account for numeric error, hence "1e-12" and not "0"
             g = zeros((A.shape[0],))
-            #print("a_shape[0]", A.shape[0])
-            #boundary_points = abs(Y - h) < 1e-12        # Do this instead of " boundary_points = (Y == h) "
-            #g[boundary_points] += ...
-            #print("X", X)
-            #print("Y", Y)
+            # print("a_shape[0]", A.shape[0])
+            # boundary_points = abs(Y - h) < 1e-12        # Do this instead of " boundary_points = (Y == h) "
+            # g[boundary_points] += ...
+            # print("X", X)
+            # print("Y", Y)
 
             cut = 1e-12
 
@@ -806,48 +813,48 @@ if __name__ == "__main__":
 
             if TIME_DEBUG:
                 print(f"boundary points: {boundary_points}")
-            #g[boundary_points] += (1 / h ** 2) * uexact(t,
+            # g[boundary_points] += (1 / h ** 2) * uexact(t,
             # X[boundary_points], Y[boundary_points] - h)
             g[boundary_points] += uexact(t, X[boundary_points],
-            Y[boundary_points] - h)
+                                         Y[boundary_points] - h)
 
-            boundary_points = abs(Y-(1-h)) < cut
+            boundary_points = abs(Y - (1 - h)) < cut
 
             if TIME_DEBUG:
                 print(f"boundary points: {boundary_points}")
-            #g[boundary_points] += (1 / h ** 2) * uexact(t,
+            # g[boundary_points] += (1 / h ** 2) * uexact(t,
             # X[boundary_points], Y[boundary_points] + h)
             g[boundary_points] += uexact(t, X[boundary_points],
-            Y[boundary_points] + h)
+                                         Y[boundary_points] + h)
 
             boundary_points = abs(X - h) < cut
 
             if TIME_DEBUG:
                 print(f"boundary points: {boundary_points}")
-            #g[boundary_points] += (1 / h ** 2) * uexact(t,
+            # g[boundary_points] += (1 / h ** 2) * uexact(t,
             # X[boundary_points] - h, Y[boundary_points])
             g[boundary_points] += uexact(t, X[boundary_points] - h,
-            Y[boundary_points])
+                                         Y[boundary_points])
 
-            boundary_points = abs(X - (1-h)) < cut
+            boundary_points = abs(X - (1 - h)) < cut
 
             if TIME_DEBUG:
                 print(f"boundary points: {boundary_points}")
-            #g[boundary_points] += (1 / h ** 2) * uexact(t,
+            # g[boundary_points] += (1 / h ** 2) * uexact(t,
             # X[boundary_points] + h, Y[boundary_points])
             g[boundary_points] += uexact(t, X[boundary_points] + h,
-            Y[boundary_points])
+                                         Y[boundary_points])
 
             # handle the corner cases SEPARATELY (will be counted )
 
             # looks ok
 
-        # Backward Euler
+            # Backward Euler
             # Task: fill in the arguments to backward Euler
             # f(t,x,y)
             f_be = f(t, X, Y)
 
-            #local_u = u_local[i - 1, rank]
+            # local_u = u_local[i - 1, rank]
 
             # Lecture 26, slides 22 and 23 -- need (1/h**2) factor for g?
             # ASSUMING time step is SMALL (for u_i-1 to be a good guess...)
@@ -855,7 +862,7 @@ if __name__ == "__main__":
             # halo regions)
             u_local[i][start_index:end_index] = \
                 euler_backward(A, u_local[i - 1, :], ht, f_be,
-                                           (1 / h ** 2) * g, n_local_domain)
+                               (1 / h ** 2) * g, n_local_domain)
 
             # want f at
             # current time value
@@ -916,13 +923,15 @@ if __name__ == "__main__":
                 print(f"final u (exact) array: {ue_global[-1, :]}")
 
                 # changed from X, X to X_global, Y_global (above)
-                print(f"final u (exact) function: {uexact(T, X_global, Y_global)}")
+                print(
+                    f"final u (exact) function: {uexact(T, X_global, Y_global)}")
 
                 print(f"ue_global: {ue_global}")
 
             # Compute L2-norm of the error at final time
             e = (u_global[-1, :] - ue_global[-1, :]).reshape(-1, )
-            enorm = linalg.norm(e) * h # Task: compute the L2 norm over space-time
+            enorm = linalg.norm(
+                e) * h  # Task: compute the L2 norm over space-time
             # here.  In serial this is just one line.  In parallel...
             # Parallel task: In parallel, write a helper function to compute the norm of "e" in parallel
 
@@ -930,7 +939,6 @@ if __name__ == "__main__":
             sys.stderr.write("Nt, N, Error is:  " + str(nt) + ",  " + str(n)
                              + ",  " + str(enorm) + "\n")
             error.append(enorm)
-
 
         # You can turn this on to visualize the solution.  Possibly helpful for debugging.
         # Only works in serial.  Parallel visualizations will require that you stitch together
@@ -948,17 +956,16 @@ if __name__ == "__main__":
                 pyplot.title("Initial Condition")
                 pyplot.savefig(f"{parallel_root_current}solution_initial.png")
 
-
-                #pyplot.figure(10)
-                #pyplot.imshow(u[5,:].reshape(n,n))
-                #pyplot.colorbar()
-                #pyplot.xlabel('X')
-                #pyplot.ylabel('Y')
-                #pyplot.title("Solution at final time")
+                # pyplot.figure(10)
+                # pyplot.imshow(u[5,:].reshape(n,n))
+                # pyplot.colorbar()
+                # pyplot.xlabel('X')
+                # pyplot.ylabel('Y')
+                # pyplot.title("Solution at final time")
 
                 pyplot.figure(-12)
-                #print(f"Nt shape: {Nt_values.shape}")
-                #print(f"mid time index: {Nt_values[0] // 2}")
+                # print(f"Nt shape: {Nt_values.shape}")
+                # print(f"mid time index: {Nt_values[0] // 2}")
 
                 if ORIGINAL:
                     pyplot.imshow(u_global[Nt_values[0] // 2, :].reshape(n, n))
@@ -980,22 +987,21 @@ if __name__ == "__main__":
                     pyplot.imshow(uexact(t0 + (Nt_values[0] // 2) * ht,
                                          X_global, Y_global)
                                   .reshape(n, n), origin='lower', extent=(0, 1,
-                                                                            0, 1))
+                                                                          0, 1))
                 pyplot.colorbar()
                 pyplot.xlabel('X')
                 pyplot.ylabel('Y')
                 pyplot.title("Exact Solution at mid time")
                 pyplot.savefig(f"{parallel_root_current}exact_mid.png")
 
-                #import pdb; pdb.set_trace()
+                # import pdb; pdb.set_trace()
 
-                #pyplot.figure(11)
-                #pyplot.imshow(u[-22,:].reshape(n,n))
-                #pyplot.colorbar()
-                #pyplot.xlabel('X')
-                #pyplot.ylabel('Y')
-                #pyplot.title("Solution at final time")
-
+                # pyplot.figure(11)
+                # pyplot.imshow(u[-22,:].reshape(n,n))
+                # pyplot.colorbar()
+                # pyplot.xlabel('X')
+                # pyplot.ylabel('Y')
+                # pyplot.title("Solution at final time")
 
                 pyplot.figure(-3)
                 if ORIGINAL:
@@ -1012,10 +1018,10 @@ if __name__ == "__main__":
                 pyplot.figure(-4)
                 if ORIGINAL:
                     pyplot.imshow(uexact(T, X_global,
-                               Y_global).reshape(n, n))
+                                         Y_global).reshape(n, n))
                 else:
                     pyplot.imshow(uexact(T, X_global,
-                               Y_global).reshape(n,n),
+                                         Y_global).reshape(n, n),
                                   origin='lower', extent=(0, 1, 0, 1))
                 pyplot.colorbar()
                 pyplot.xlabel('X')
@@ -1023,8 +1029,7 @@ if __name__ == "__main__":
                 pyplot.title("Exact Solution at final time")
                 pyplot.savefig(f"{parallel_root_current}exact_final.png")
 
-                #pyplot.show()
-
+                # pyplot.show()
 
     # Plot convergence
     if rank == 0:
@@ -1032,21 +1037,22 @@ if __name__ == "__main__":
             # When generating this plot in parallel, you should have only rank=0
             # save the graphic to a .PNG
             pyplot.figure(-999)
-            pyplot.loglog(1./N_values, 1./N_values**2, '-ok')
-            pyplot.loglog(1./N_values, array(error), '-sr')
+            pyplot.loglog(1. / N_values, 1. / N_values ** 2, '-ok')
+            pyplot.loglog(1. / N_values, array(error), '-sr')
             pyplot.tick_params(labelsize='large')
             pyplot.xlabel(r'Spatial $h$', fontsize='large')
             pyplot.ylabel(r'$||e||_{L_2}$', fontsize='large')
             pyplot.legend(['Ref Quadratic', 'Computed Error'], fontsize='large')
 
             # TODO: save error plot -- change to tight for final...
-            pyplot.savefig(f'{parallel_root_current}error.png', dpi=500, format='png',
-                           pad_inches=0.0,)
+            pyplot.savefig(f'{parallel_root_current}error.png', dpi=500,
+                           format='png',
+                           pad_inches=0.0, )
             # pyplot.savefig(f'{parallel_root}error.png', dpi=500, format='png',
             #                bbox_inches='tight', pad_inches=0.0,)
 
             # TODO: comment out the show plots for final...
-            #pyplot.show()
+            # pyplot.show()
 
 # TODO: 1 process, no communication...
 # TODO: another directory for plots (separate serial and parallel...)
