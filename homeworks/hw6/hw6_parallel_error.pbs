@@ -12,7 +12,7 @@
 
 ## The debug queue will likely be faster, but if your code takes more than 5 or
 ## 10 minutes, switch "debug" to "default"
-#PBS -q debug
+#PBS -q default
 
 ## This is the name of job itself shown with qstat
 #PBS -N hw4_output
@@ -43,7 +43,7 @@
 #      < press y to accept installation of all new packages and the many dependencies > 
 
 CONDA_ENV="wheeler_mpi_py3_2021"
-HOMEWORK_FILENAME="hw6_parallel_final.py"
+HOMEWORK_FILENAME="hw6_parallel_error.py"
 
 #
 # ==> You will need to change "source activate ..." to use your anaconda module name
