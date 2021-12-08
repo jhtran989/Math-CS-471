@@ -10,8 +10,6 @@ matvec_program="matvec"
 matvec_2d_program="matvec_2d"
 cannon_program="cannon"
 
-parallel_error_script="hw6_parallel_error.pbs"
-
 # dir names
 up="../"
 up2=${up}${up}
@@ -36,6 +34,8 @@ num_elements_one=1000
 num_elements_ten=10000
 
 parallel_error_dir="parallel_error/"
+parallel_error_script="hw6_parallel_error.pbs"
+parallel_error_python="hw6_parallel_final.py"
 
 # changed from run_script_inner_prod
 function run_parallel_error_script() {
@@ -45,7 +45,13 @@ function run_parallel_error_script() {
 	mkdir -p ${parallel_error_dir}
 	cd ${parallel_error_dir}
 	
-	qsub ${up}${parallel_error_script}
+	# copy shell script to current dir
+	cp ${up}${parallel_error_script} ${parallel_error_script}
+	
+	# copy python script to current dir
+	cp ${up}${parallel_error_python} ${parallel_error_python}
+	
+	qsub ${parallel_error_script}
 }
 
 function run_script_matvec_2d {
