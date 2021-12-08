@@ -35,14 +35,17 @@ num_elements_ten=10000
 
 poisson_python="poisson.py"
 
+# REMEMBER TO UPDATE BELOW
 parallel_error_dir="parallel_error/"
 parallel_error_script="hw6_parallel_error.pbs"
-parallel_error_python="hw6_parallel_final.py"
+parallel_error_python="hw6_parallel_error.py"
 
 # changed from run_script_inner_prod
 function run_parallel_error_script() {
 	#move module load to the job script as well
 	#module load mpich-3.2-gcc-4.8.5-7ebkszx
+	
+	[[ -d ${parallel_error_dir} ]] && rm -r ${parallel_error_dir}
 	
 	mkdir -p ${parallel_error_dir}
 	cd ${parallel_error_dir}
