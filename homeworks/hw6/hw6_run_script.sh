@@ -58,7 +58,7 @@ function run_parallel_error_script() {
 	cp ${up}${poisson_python} ${poisson_python}
 	
 	# escape '$' with '\' since there are some variables only seen in the .pbs script
-	sed -i "81 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_error_python}"
+	sed -i "81 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_error_python}" ${parallel_error_script}
 	
 	qsub ${parallel_error_script}
 }
