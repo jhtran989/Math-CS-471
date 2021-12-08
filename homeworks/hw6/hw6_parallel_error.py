@@ -22,7 +22,9 @@ nprocs = comm.size
 
 # Plots Stuff
 parallel_root = f"parallel/"
-parallel_plots_dir = f"{parallel_root}plots/"
+# parallel_plots_dir = f"{parallel_root}plots/"
+# os.makedirs(parallel_plots_dir, exist_ok=True)
+os.makedirs(parallel_root, exist_ok=True)
 
 # move to main below
 # os.makedirs(parallel_plots_dir, exist_ok=True)
@@ -461,8 +463,6 @@ def matvec_check(A, X, Y, N, comm, h):
 # - The total number of spatial points is (N_values[k] + 2)^2
 
 if __name__ == "__main__":
-    os.makedirs(parallel_plots_dir, exist_ok=True)
-    
     # Use these problem sizes for your error convergence studies
     # Nt_values = array([8, 8*4, 8*4*4, 8*4*4*4])
     # N_values = array([8, 16, 32, 64 ])
@@ -485,8 +485,8 @@ if __name__ == "__main__":
     # T = 0.5  # 0.5
 
     # Changed for our special case (second function above)
-    # Nt_values = array([12 * (4 ** 2)]) # 8*4 -> 100
-    # N_values = array([8 * (2 ** 2)])  # 16
+    # Nt_values = array([12]) # 8*4 -> 100
+    # N_values = array([8])  # 16
     T = 0.75  # 0.5
 
     # part_norm = array([1.0])
@@ -520,6 +520,13 @@ if __name__ == "__main__":
 
     # Begin loop over various numbers of time points (nt) and spatial grid sizes (n)
     for (nt, n) in zip(Nt_values, N_values):
+        # create dir in plots for each value in Nt_values
+        # parallel_plots_current_dir = f"{parallel_plots_dir}{nt}/"
+        # os.makedirs(parallel_plots_current_dir, exist_ok=True)
+
+        parallel_root_current = f"{parallel_root}n={n},nt={nt},T={T}/"
+        parallel_plots_dir_current = f"{parallel_root_current}plots/"
+        os.makedirs(parallel_plots_dir_current, exist_ok=True)
 
         # Declare time step size
         t0 = 0.0
@@ -749,7 +756,7 @@ if __name__ == "__main__":
             pyplot.xlabel('X')
             pyplot.ylabel('Y')
             pyplot.title(f"Solution, i={0}")
-            pyplot.savefig(f"{parallel_plots_dir}solution_{0}.png")
+            pyplot.savefig(f"{parallel_plots_dir_current}solution_{0}.png")
             pyplot.close(pyplot.figure(0))
 
         # Testing harness for parallel part: Only comment-in and run for the smallest
@@ -900,7 +907,7 @@ if __name__ == "__main__":
                 pyplot.xlabel('X')
                 pyplot.ylabel('Y')
                 pyplot.title(f"Solution, i={i}")
-                pyplot.savefig(f"{parallel_plots_dir}solution_{i}.png")
+                pyplot.savefig(f"{parallel_plots_dir_current}solution_{i}.png")
                 pyplot.close(pyplot.figure(i))
 
         if rank == 0:
@@ -939,7 +946,7 @@ if __name__ == "__main__":
                 pyplot.xlabel('X')
                 pyplot.ylabel('Y')
                 pyplot.title("Initial Condition")
-                pyplot.savefig(f"{parallel_root}solution_initial.png")
+                pyplot.savefig(f"{parallel_root_current}solution_initial.png")
 
 
                 #pyplot.figure(10)
@@ -962,7 +969,7 @@ if __name__ == "__main__":
                 pyplot.xlabel('X')
                 pyplot.ylabel('Y')
                 pyplot.title("Solution at mid time")
-                pyplot.savefig(f"{parallel_root}solution_mid.png")
+                pyplot.savefig(f"{parallel_root_current}solution_mid.png")
 
                 pyplot.figure(-99)
                 if ORIGINAL:
@@ -978,7 +985,7 @@ if __name__ == "__main__":
                 pyplot.xlabel('X')
                 pyplot.ylabel('Y')
                 pyplot.title("Exact Solution at mid time")
-                pyplot.savefig(f"{parallel_root}exact_mid.png")
+                pyplot.savefig(f"{parallel_root_current}exact_mid.png")
 
                 #import pdb; pdb.set_trace()
 
@@ -1000,7 +1007,7 @@ if __name__ == "__main__":
                 pyplot.xlabel('X')
                 pyplot.ylabel('Y')
                 pyplot.title("Solution at final time")
-                pyplot.savefig(f"{parallel_root}solution_final.png")
+                pyplot.savefig(f"{parallel_root_current}solution_final.png")
 
                 pyplot.figure(-4)
                 if ORIGINAL:
@@ -1014,7 +1021,7 @@ if __name__ == "__main__":
                 pyplot.xlabel('X')
                 pyplot.ylabel('Y')
                 pyplot.title("Exact Solution at final time")
-                pyplot.savefig(f"{parallel_root}exact_final.png")
+                pyplot.savefig(f"{parallel_root_current}exact_final.png")
 
                 #pyplot.show()
 
@@ -1033,7 +1040,7 @@ if __name__ == "__main__":
             pyplot.legend(['Ref Quadratic', 'Computed Error'], fontsize='large')
 
             # TODO: save error plot -- change to tight for final...
-            pyplot.savefig(f'{parallel_root}error.png', dpi=500, format='png',
+            pyplot.savefig(f'{parallel_root_current}error.png', dpi=500, format='png',
                            pad_inches=0.0,)
             # pyplot.savefig(f'{parallel_root}error.png', dpi=500, format='png',
             #                bbox_inches='tight', pad_inches=0.0,)
