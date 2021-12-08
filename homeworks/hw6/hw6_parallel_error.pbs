@@ -8,24 +8,24 @@
 #PBS -lnodes=1:ppn=8
 
 ## This is the max run-time allowed  hr:min:sec
-#PBS -l walltime=00:26:00 
+#PBS -l walltime=00:30:00 
 
 ## The debug queue will likely be faster, but if your code takes more than 5 or
 ## 10 minutes, switch "debug" to "default"
 #PBS -q default
 
 ## This is the name of job itself shown with qstat
-#PBS -N hw4_output
+#PBS -N hw6_parallel_error
 
 ## This line ensures the script runs in Bash
 #PBS -S /bin/bash
 
 ## Send mail when the script aborts "a" and ends "e" to your email address
-#PBS -m ae
-#PBS -M jtran989@unm.edu 
+### PBS -m ae
+### PBS -M jtran989@unm.edu
 
 ## This is the filename for all printed output from your code
-#PBS -o strong_scaling.output
+#PBS -o parallel_error.output
 
 ## This line joins the output and error to print to the same file
 #PBS -j oe
