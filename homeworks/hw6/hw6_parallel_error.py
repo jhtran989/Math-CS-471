@@ -24,7 +24,8 @@ nprocs = comm.size
 parallel_root = f"parallel/"
 parallel_plots_dir = f"{parallel_root}plots/"
 
-os.makedirs(parallel_plots_dir, exist_ok=True)
+# move to main below
+# os.makedirs(parallel_plots_dir, exist_ok=True)
 
 # DEBUG Stuff
 # print convergence check
@@ -460,6 +461,8 @@ def matvec_check(A, X, Y, N, comm, h):
 # - The total number of spatial points is (N_values[k] + 2)^2
 
 if __name__ == "__main__":
+    os.makedirs(parallel_plots_dir, exist_ok=True)
+    
     # Use these problem sizes for your error convergence studies
     # Nt_values = array([8, 8*4, 8*4*4, 8*4*4*4])
     # N_values = array([8, 16, 32, 64 ])
