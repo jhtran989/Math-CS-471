@@ -45,7 +45,7 @@ function run_parallel_error_script() {
 	mkdir -p ${parallel_error_dir}
 	cd ${parallel_error_dir}
 	
-	qsub ${parallel_error_dir}${parallel_error_script}
+	qsub ${up}${parallel_error_script}
 }
 
 function run_script_matvec_2d {
