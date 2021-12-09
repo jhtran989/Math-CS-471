@@ -98,7 +98,7 @@ function run_parallel_weak_script() {
 	num_processes_per_node=8
 	
 	# escape '$' with '\' since there are some variables only seen in the .pbs script
-	sed -i "9 i #PBS -lnodes={num_nodes}:ppn={num_processes_per_node}"
+	sed -i "9 i #PBS -lnodes={num_nodes}:ppn={num_processes_per_node}" ${parallel_weak_script}
 	sed -i "82 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_weak_python}" ${parallel_weak_script}
 	
 	qsub ${parallel_weak_script}
