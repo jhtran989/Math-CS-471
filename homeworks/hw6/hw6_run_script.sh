@@ -40,11 +40,17 @@ parallel_error_dir="parallel_error/"
 parallel_error_script="hw6_parallel_error.pbs"
 parallel_error_python="hw6_parallel_error.py"
 
+# REMEMBER TO UPDATE BELOW
+parallel_weak_dir="parallel_weak/"
+parallel_weak_script="hw6_parallel_weak.pbs"
+parallel_weak_python="hw6_parallel_weak.py"
+
 # changed from run_script_inner_prod
 function run_parallel_error_script() {
 	#move module load to the job script as well
 	#module load mpich-3.2-gcc-4.8.5-7ebkszx
 	
+	# clean out directory to remove any artifacts from past debug/run session
 	[[ -d ${parallel_error_dir} ]] && rm -r ${parallel_error_dir}
 	
 	mkdir -p ${parallel_error_dir}
@@ -61,6 +67,41 @@ function run_parallel_error_script() {
 	sed -i "81 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_error_python}" ${parallel_error_script}
 	
 	qsub ${parallel_error_script}
+}
+
+function run_parallel_weak_script() {
+	#move module load to the job script as well
+	#module load mpich-3.2-gcc-4.8.5-7ebkszx
+	
+	# clean out directory to remove any artifacts from past debug/run session
+	[[ -d ${parallel_weak_dir} ]] && rm -r ${parallel_weak_dir}
+	
+	mkdir -p ${parallel_weak_dir}
+	cd ${parallel_weak_dir}
+	
+	# copy shell script to current dir
+	cp ${up}${parallel_weak_script} ${parallel_weak_script}
+	
+	# copy python script to current dir
+	cp ${up}${parallel_weak_python} ${parallel_weak_python}
+	cp ${up}${poisson_python} ${poisson_python}
+	
+	# calculate the corresponding number of nodes and processes
+	num_nodes=$(( num_processes / 8 ))
+	remainder=$(( num_processes % 8 ))
+
+	# just round up if there are still some processes left over
+	if (( ${remainder} != 0 )); then
+		num_nodes=$(( num_nodes + 1 ))
+	fi
+
+	num_processes_per_node=8
+	
+	# escape '$' with '\' since there are some variables only seen in the .pbs script
+	sed -i "9 i #PBS -lnodes={num_nodes}:ppn={num_processes_per_node}"
+	sed -i "82 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_weak_python}" ${parallel_weak_script}
+	
+	qsub ${parallel_weak_script}
 }
 
 function run_script_matvec_2d {
@@ -101,21 +142,13 @@ function run_script_cannon {
 # ;; vs exit;; (one continues and the other exits)
 
 # OPTIONS
-while getopts "p:" args; do
+while getopts ":p:w:" args; do
 	case $args in 
 	h)
 		echo "============================================================================================="
 		echo "Arguments:"
 		echo "  -p	[np]	where np is the number of processes"
 		echo "============================================================================================="
-		exit;;
-	n)
-		normal=1
-		choice="${OPTARG}"
-		echo "============================================================================================="
-		echo "Executing normally"
-		echo "============================================================================================="
-		run_script
 		exit;;
 	p)
 		num_processes=${OPTARG}
@@ -124,14 +157,12 @@ while getopts "p:" args; do
 		echo "============================================================================================="
 		run_parallel_error_script
 		exit;;
-	t)
-		tau_profile=1
-		tau_trace=1
-		choice=${OPTARG}
+	w)
+		num_processes=${OPTARG}
 		echo "============================================================================================="
-		echo "Executing with Tau tracing (and profiling)"
+		echo "Executing parallel algorithm to make the timings file for weak scaling"
 		echo "============================================================================================="
-		run_script
+		run_parallel_weak_script
 		exit;;
 	\?)
 		echo "============================================================================================="
