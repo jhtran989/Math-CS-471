@@ -454,14 +454,14 @@ def matvec_check(A, X, Y, N, comm, h):
 
 
 ###########
-# This code block chooses the final time and problem sizes (nt, n) to loop over.  
+# This code block chooses the final time and problem sizes (nt, n) to loop over.
 # - You can automate the selection of problem sizes using if/else statements or
 #   command line parameters.  Or, you can simply comment in (and comment out)
-#   lines of code to select your problem sizes. 
+#   lines of code to select your problem sizes.
 #
 # - Note that N_values corresponds to the number of _interior_ (non-boundary) grid
-#   points in one coordinate direction.  Your total number of grid points in one 
-#   coordinate direction would be (N_values[k] + 2). 
+#   points in one coordinate direction.  Your total number of grid points in one
+#   coordinate direction would be (N_values[k] + 2).
 #
 # - The total number of spatial points is (N_values[k] + 2)^2
 
@@ -472,8 +472,8 @@ if __name__ == "__main__":
     # T = 0.5
 
     # Changed for our special case (second function above)
-    Nt_values = array([12 * (4 ** i) for i in range(4)])  # 8*4 -> 100
-    N_values = array([8 * (2 ** i) for i in range(4)])  # 16
+    Nt_values = array([12 * (4 ** i) for i in range(4)])  # 4
+    N_values = array([8 * (2 ** i) for i in range(4)])  # 4
     #
     # print(f"N time values: {Nt_values}")
     # print(f"N values: {N_values}")
@@ -955,6 +955,7 @@ if __name__ == "__main__":
                 pyplot.ylabel('Y')
                 pyplot.title("Initial Condition")
                 pyplot.savefig(f"{parallel_root_current}solution_initial.png")
+                pyplot.close(pyplot.figure(-1))
 
                 # pyplot.figure(10)
                 # pyplot.imshow(u[5,:].reshape(n,n))
@@ -977,6 +978,7 @@ if __name__ == "__main__":
                 pyplot.ylabel('Y')
                 pyplot.title("Solution at mid time")
                 pyplot.savefig(f"{parallel_root_current}solution_mid.png")
+                pyplot.close(pyplot.figure(-12))
 
                 pyplot.figure(-99)
                 if ORIGINAL:
@@ -993,6 +995,7 @@ if __name__ == "__main__":
                 pyplot.ylabel('Y')
                 pyplot.title("Exact Solution at mid time")
                 pyplot.savefig(f"{parallel_root_current}exact_mid.png")
+                pyplot.close(pyplot.figure(-99))
 
                 # import pdb; pdb.set_trace()
 
@@ -1014,6 +1017,7 @@ if __name__ == "__main__":
                 pyplot.ylabel('Y')
                 pyplot.title("Solution at final time")
                 pyplot.savefig(f"{parallel_root_current}solution_final.png")
+                pyplot.close(pyplot.figure(-3))
 
                 pyplot.figure(-4)
                 if ORIGINAL:
@@ -1028,6 +1032,7 @@ if __name__ == "__main__":
                 pyplot.ylabel('Y')
                 pyplot.title("Exact Solution at final time")
                 pyplot.savefig(f"{parallel_root_current}exact_final.png")
+                pyplot.close(pyplot.figure(-4))
 
                 # pyplot.show()
 
@@ -1053,6 +1058,8 @@ if __name__ == "__main__":
 
             # TODO: comment out the show plots for final...
             # pyplot.show()
+
+            pyplot.close(pyplot.figure(-999))
 
 # TODO: 1 process, no communication...
 # TODO: another directory for plots (separate serial and parallel...)
