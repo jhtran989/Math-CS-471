@@ -78,12 +78,12 @@ function run_parallel_weak_script() {
 	#move module load to the job script as well
 	#module load mpich-3.2-gcc-4.8.5-7ebkszx
 	
-	# clean out directory to remove any artifacts from past debug/run session
-	[[ -d ${parallel_weak_dir} ]] && rm -r ${parallel_weak_dir}
-	
 	# make directory for strong scaling
 	mkdir -p ${parallel_weak_dir}
 	cd ${parallel_weak_dir}
+	
+	# clean out directory to remove any artifacts from past debug/run session
+	[[ -d ${num_processes} ]] && rm -r ${num_processes}
 	
 	# want to keep a copy of the output file by the PBS system for each run, so need separate directories (on different number of processes)
 	mkdir -p ${num_processes}
@@ -118,12 +118,12 @@ function run_parallel_strong_script() {
 	#move module load to the job script as well
 	#module load mpich-3.2-gcc-4.8.5-7ebkszx
 	
-	# clean out directory to remove any artifacts from past debug/run session
-	[[ -d ${parallel_strong_dir} ]] && rm -r ${parallel_strong_dir}
-	
 	# make directory for strong scaling
 	mkdir -p ${parallel_strong_dir}
 	cd ${parallel_strong_dir}
+	
+	# clean out directory to remove any artifacts from past debug/run session
+	[[ -d ${num_processes} ]] && rm -r ${num_processes}
 	
 	# want to keep a copy of the output file by the PBS system for each run, so need separate directories (on different number of processes)
 	mkdir -p ${num_processes}
@@ -237,6 +237,8 @@ done
 
 if [ $OPTIND -eq 1 ]; 
 then 
+	echo "============================================================================================="
 	echo "No options were passed. Please use option -h for a list of valid options."; 
+	echo "============================================================================================="
 fi
 	

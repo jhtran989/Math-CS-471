@@ -16,7 +16,7 @@
 #PBS -q default
 
 ## This is the name of job itself shown with qstat
-#PBS -N hw6_parallel_error
+#PBS -N hw6_parallel_strong
 
 ## This line ensures the script runs in Bash
 #PBS -S /bin/bash
@@ -26,7 +26,7 @@
 ### PBS -M jtran989@unm.edu
 
 ## This is the filename for all printed output from your code
-#PBS -o parallel_error.output
+#PBS -o parallel_strong.output
 
 ## This line joins the output and error to print to the same file
 #PBS -j oe
