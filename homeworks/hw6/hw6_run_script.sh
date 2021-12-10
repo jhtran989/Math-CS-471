@@ -81,8 +81,13 @@ function run_parallel_weak_script() {
 	# clean out directory to remove any artifacts from past debug/run session
 	[[ -d ${parallel_weak_dir} ]] && rm -r ${parallel_weak_dir}
 	
+	# make directory for strong scaling
 	mkdir -p ${parallel_weak_dir}
 	cd ${parallel_weak_dir}
+	
+	# want to keep a copy of the output file by the PBS system for each run, so need separate directories (on different number of processes)
+	mkdir -p ${num_processes}
+	cd ${num_processes}
 	
 	# copy shell script to current dir
 	cp ${up2}${parallel_weak_script} ${parallel_weak_script}
@@ -116,7 +121,7 @@ function run_parallel_strong_script() {
 	# clean out directory to remove any artifacts from past debug/run session
 	[[ -d ${parallel_strong_dir} ]] && rm -r ${parallel_strong_dir}
 	
-	# make directory for weak scaling
+	# make directory for strong scaling
 	mkdir -p ${parallel_strong_dir}
 	cd ${parallel_strong_dir}
 	
@@ -125,11 +130,11 @@ function run_parallel_strong_script() {
 	cd ${num_processes}
 	
 	# copy shell script to current dir
-	cp ${up}${parallel_strong_script} ${parallel_strong_script}
+	cp ${up2}${parallel_strong_script} ${parallel_strong_script}
 	
 	# copy python script to current dir
-	cp ${up}${parallel_strong_python} ${parallel_strong_python}
-	cp ${up}${poisson_python} ${poisson_python}
+	cp ${up2}${parallel_strong_python} ${parallel_strong_python}
+	cp ${up2}${poisson_python} ${poisson_python}
 	
 	# calculate the corresponding number of nodes and processes
 	num_nodes=$(( num_processes / 8 ))
