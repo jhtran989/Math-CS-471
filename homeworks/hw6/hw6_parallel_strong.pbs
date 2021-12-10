@@ -5,11 +5,14 @@
 ########################################################################
 
 ## This requests 1 node, and 8 cores, which is perfect our our thread-level programming
+####PBS -lnodes=1:ppn=8
 ## Fill out the number of nodes/cores later in shell script...
 
 
 ## This is the max run-time allowed  hr:min:sec
-#PBS -l walltime=00:30:00 
+###PBS -l walltime=00:30:00 
+### Fill out the walltime later in the shell script...need more time for the 5 timings...
+
 
 ## The debug queue will likely be faster, but if your code takes more than 5 or
 ## 10 minutes, switch "debug" to "default"

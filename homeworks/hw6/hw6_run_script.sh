@@ -147,9 +147,24 @@ function run_parallel_strong_script() {
 
 	num_processes_per_node=8
 	
+	if (( $num_processes > 8 )); then
+		num_hours="00"
+		num_minutes="35"
+	elif (( $num_processes == 16 )); then
+		num_hours="00"
+		num_minutes="50"
+	elif (( $num_processes == 32 )); then
+		num_hours="01"
+		num_minutes="00"
+	else # assumed to be 64 processes...
+		num_hours="01"
+		num_minutes="35"
+	fi
+	
 	# escape '$' with '\' since there are some variables only seen in the .pbs script
-	sed -i "9 i #PBS -lnodes=${num_nodes}:ppn=${num_processes_per_node}" ${parallel_strong_script}
-	sed -i "82 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_strong_python}" ${parallel_strong_script}
+	sed -i "10 i #PBS -lnodes=${num_nodes}:ppn=${num_processes_per_node}" ${parallel_strong_script}
+	sed -i "16 i #PBS -l walltime=00:${num_hours}:${num_minutes}" ${parallel_strong_script}
+	sed -i "86 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_strong_python}" ${parallel_strong_script}
 	
 	qsub ${parallel_strong_script}
 }
