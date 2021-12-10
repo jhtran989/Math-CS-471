@@ -197,34 +197,46 @@ while getopts ":p:w:s:" args; do
 	h)
 		echo "============================================================================================="
 		echo "Arguments:"
-		echo "  -p	[np]	where np is the number of processes"
+		echo "  -p	[np]	normal parallel algorithm to create the error plots"
+		echo "  -w	[np]	create timings in parallel for the WEAK scaling study"
+		echo "  -s	[np]	create timings in parallel for the STRONG scaling study"
+		echo " where [np] is the number of processes "
 		echo "============================================================================================="
 		exit;;
 	p)
 		num_processes=${OPTARG}
 		echo "============================================================================================="
 		echo "Executing parallel algorithm to create the solution/error plot"
+		echo "number of processes: ${num_processes}"
 		echo "============================================================================================="
 		run_parallel_error_script
 		exit;;
 	w)
 		num_processes=${OPTARG}
 		echo "============================================================================================="
-		echo "Executing parallel algorithm to make the timings file for weak scaling"
+		echo "Executing parallel algorithm to make the timings file for WEAK scaling"
+		echo "number of processes: ${num_processes}"
 		echo "============================================================================================="
 		run_parallel_weak_script
 		exit;;
 	s)
 		num_processes=${OPTARG}
 		echo "============================================================================================="
-		echo "Executing parallel algorithm to make the timings file for strong scaling"
+		echo "Executing parallel algorithm to make the timings file for STRONG scaling"
+		echo "number of processes: ${num_processes}"
 		echo "============================================================================================="
 		run_parallel_strong_script
 		exit;;
 	\?)
 		echo "============================================================================================="
-		echo "Sorry, invalid option. Please use option -h for valid options."
+		echo "Sorry, invalid option. Please use option -h for a list of valid options."
 		echo "============================================================================================="
 		exit;;
 	esac
 done 
+
+if [ $OPTIND -eq 1 ]; 
+then 
+	echo "No options were passed. Please use option -h for a list of valid options."; 
+fi
+	
