@@ -35,15 +35,20 @@ num_elements_ten=10000
 
 poisson_python="poisson.py"
 
-# REMEMBER TO UPDATE BELOW
+# Error plot to test convergence -- REMEMBER TO UPDATE BELOW
 parallel_error_dir="parallel_error/"
 parallel_error_script="hw6_parallel_error.pbs"
 parallel_error_python="hw6_parallel_error.py"
 
-# REMEMBER TO UPDATE BELOW
+# Record timings for weak scaling -- REMEMBER TO UPDATE BELOW
 parallel_weak_dir="parallel_weak/"
 parallel_weak_script="hw6_parallel_weak.pbs"
 parallel_weak_python="hw6_parallel_weak.py"
+
+# Record timings for strong scaling -- REMEMBER TO UPDATE BELOW
+parallel_strong_dir="parallel_strong/"
+parallel_strong_script="hw6_parallel_strong.pbs"
+parallel_strong_python="hw6_parallel_strong.py"
 
 # changed from run_script_inner_prod
 function run_parallel_error_script() {
@@ -80,11 +85,11 @@ function run_parallel_weak_script() {
 	cd ${parallel_weak_dir}
 	
 	# copy shell script to current dir
-	cp ${up}${parallel_weak_script} ${parallel_weak_script}
+	cp ${up2}${parallel_weak_script} ${parallel_weak_script}
 	
 	# copy python script to current dir
-	cp ${up}${parallel_weak_python} ${parallel_weak_python}
-	cp ${up}${poisson_python} ${poisson_python}
+	cp ${up2}${parallel_weak_python} ${parallel_weak_python}
+	cp ${up2}${poisson_python} ${poisson_python}
 	
 	# calculate the corresponding number of nodes and processes
 	num_nodes=$(( num_processes / 8 ))
@@ -102,6 +107,46 @@ function run_parallel_weak_script() {
 	sed -i "82 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_weak_python}" ${parallel_weak_script}
 	
 	qsub ${parallel_weak_script}
+}
+
+function run_parallel_strong_script() {
+	#move module load to the job script as well
+	#module load mpich-3.2-gcc-4.8.5-7ebkszx
+	
+	# clean out directory to remove any artifacts from past debug/run session
+	[[ -d ${parallel_strong_dir} ]] && rm -r ${parallel_strong_dir}
+	
+	# make directory for weak scaling
+	mkdir -p ${parallel_strong_dir}
+	cd ${parallel_strong_dir}
+	
+	# want to keep a copy of the output file by the PBS system for each run, so need separate directories (on different number of processes)
+	mkdir -p ${num_processes}
+	cd ${num_processes}
+	
+	# copy shell script to current dir
+	cp ${up}${parallel_strong_script} ${parallel_strong_script}
+	
+	# copy python script to current dir
+	cp ${up}${parallel_strong_python} ${parallel_strong_python}
+	cp ${up}${poisson_python} ${poisson_python}
+	
+	# calculate the corresponding number of nodes and processes
+	num_nodes=$(( num_processes / 8 ))
+	remainder=$(( num_processes % 8 ))
+
+	# just round up if there are still some processes left over
+	if (( ${remainder} != 0 )); then
+		num_nodes=$(( num_nodes + 1 ))
+	fi
+
+	num_processes_per_node=8
+	
+	# escape '$' with '\' since there are some variables only seen in the .pbs script
+	sed -i "9 i #PBS -lnodes=${num_nodes}:ppn=${num_processes_per_node}" ${parallel_strong_script}
+	sed -i "82 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_strong_python}" ${parallel_strong_script}
+	
+	qsub ${parallel_strong_script}
 }
 
 function run_script_matvec_2d {
@@ -142,7 +187,7 @@ function run_script_cannon {
 # ;; vs exit;; (one continues and the other exits)
 
 # OPTIONS
-while getopts ":p:w:" args; do
+while getopts ":p:w:s:" args; do
 	case $args in 
 	h)
 		echo "============================================================================================="
@@ -163,6 +208,13 @@ while getopts ":p:w:" args; do
 		echo "Executing parallel algorithm to make the timings file for weak scaling"
 		echo "============================================================================================="
 		run_parallel_weak_script
+		exit;;
+	s)
+		num_processes=${OPTARG}
+		echo "============================================================================================="
+		echo "Executing parallel algorithm to make the timings file for strong scaling"
+		echo "============================================================================================="
+		run_parallel_strong_script
 		exit;;
 	\?)
 		echo "============================================================================================="

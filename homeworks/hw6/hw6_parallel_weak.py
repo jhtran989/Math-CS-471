@@ -505,7 +505,7 @@ if __name__ == "__main__":
     # Changed for our special case (second function above)
     # Nt_values = array([12]) # 8*4 -> 100
     # N_values = array([8])  # 16
-    T = 0.75  # 0.5
+    # T = 0.75  # 0.5
 
     # part_norm = array([1.0])
     # global_norm = zeros_like(part_norm)
@@ -949,6 +949,8 @@ if __name__ == "__main__":
             end_time = time()
 
             total_time = end_time - start_time
+
+            sys.stderr.write(f"timing: {total_time}\n")
 
             # stores the timings in a file with format
             # {num_processes} {timing}
