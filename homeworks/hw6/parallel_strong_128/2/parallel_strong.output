@@ -1,0 +1,12 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1731397.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1731397.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler169 
+
+prologue running on host: wheeler169
+Agent pid 32707
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+python: can't open file 'hw6_parallel_strong.py': [Errno 116] Stale file handle
+python: can't open file 'hw6_parallel_strong.py': [Errno 116] Stale file handle
+Wheeler Portable Batch System Epilogue
