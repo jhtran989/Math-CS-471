@@ -251,7 +251,7 @@ function run_script_cannon {
 # ;; vs exit;; (one continues and the other exits)
 
 # OPTIONS
-while getopts ":p:w:s:" args; do
+while getopts ":a:p:w:s:" args; do
 	case $args in 
 	h)
 		echo "============================================================================================="
@@ -261,6 +261,12 @@ while getopts ":p:w:s:" args; do
 		echo "  -s	[np]	create timings in parallel for the STRONG scaling study"
 		echo " where [np] is the number of processes "
 		echo "============================================================================================="
+		exit;;
+	a)
+		echo "============================================================================================="
+		echo "Executing serial algorithm to create the solution/error plot"
+		echo "============================================================================================="
+		run_serial_error_script
 		exit;;
 	p)
 		num_processes=${OPTARG}
