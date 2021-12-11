@@ -10,7 +10,7 @@ import os
 
 
 global_maxiter = 400  # go through code and refactor
-global_tol = 1e-8  # 1e-10, 1e-15
+global_tol = 1e-6  # 1e-10, 1e-15
 
 # Plots Stuff
 serial_root = f"serial/"
@@ -18,6 +18,9 @@ serial_plots_dir = f"{serial_root}plots/"
 
 os.makedirs(serial_plots_dir, exist_ok=True)
 
+# DEBUG Stuff
+PLOT_TIME_STEP = False
+FINAL_DEBUG = False
 
 '''
     # Problem Preliminary: MPI cheat sheet
@@ -521,20 +524,22 @@ if __name__ == "__main__":
                 print(f"u (backward euler): {u[i, :]}")
                 print(f"u (exact): {ue[i, :]}")
 
-            pyplot.figure(i)
-            pyplot.imshow(u[i, :].reshape(n, n), origin='lower',
-                          extent=(0, 1, 0, 1))
-            pyplot.colorbar()
-            pyplot.xlabel('X')
-            pyplot.ylabel('Y')
-            pyplot.title(f"Solution, i={i}")
-            pyplot.savefig(f"{serial_plots_dir}solution_{i}.png")
-            pyplot.close(pyplot.figure(i))
+            if PLOT_TIME_STEP:
+                pyplot.figure(i)
+                pyplot.imshow(u[i, :].reshape(n, n), origin='lower',
+                              extent=(0, 1, 0, 1))
+                pyplot.colorbar()
+                pyplot.xlabel('X')
+                pyplot.ylabel('Y')
+                pyplot.title(f"Solution, i={i}")
+                pyplot.savefig(f"{serial_plots_dir}solution_{i}.png")
+                pyplot.close(pyplot.figure(i))
 
+        if FINAL_DEBUG:
+            # Compute L2-norm of the error at final time
+            print(f"final u (backward euler): {u[-1,:]}")
+            print(f"final u (exact): {ue[-1, :]}")
 
-        # Compute L2-norm of the error at final time
-        print(f"final u (backward euler): {u[-1,:]}")
-        print(f"final u (exact): {ue[-1, :]}")
         e = (u[-1,:] - ue[-1,:]).reshape(-1,)
         enorm = linalg.norm(e) * h # Task: compute the L2 norm over space-time
         # here.  In serial this is just one line.  In parallel...
@@ -653,7 +658,7 @@ if __name__ == "__main__":
         #                bbox_inches='tight', pad_inches=0.0,)
 
         # TODO: comment out the show plots for final...
-        pyplot.show()
+        #pyplot.show()
         #pyplot.savefig('error.png', dpi=500, format='png', bbox_inches='tight', pad_inches=0.0,)
 
 
