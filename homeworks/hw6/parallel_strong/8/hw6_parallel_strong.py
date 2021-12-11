@@ -47,6 +47,12 @@ FINAL_DEBUG = False
 # plot individual time steps -- still create i = 0 plot for reference
 PLOT_TIME_STEP = False
 
+# added the communication under condition as well to reduce
+# total runtime
+# actually, we could just use the norm function above...with
+# allGather
+ERROR_NORM = True
+
 '''
     # Problem Preliminary: MPI cheat sheet
 
@@ -996,88 +1002,91 @@ if __name__ == "__main__":
 
                 # added the communication under condition as well to reduce
                 # total runtime
+                # actually, we could just use the norm function above...with
+                # allGather
 
-                if nprocs > 1:
-                    if rank != 0:
-                        if rank == (nprocs - 1):
-                            if PLOT_TIME_STEP:
-                                comm.Send(
-                                    [u_local[i][-n_local_domain:], MPI.DOUBLE],
-                                    dest=0,
-                                    tag=77)
-                            else:
-                                if i == (nt - 1):
-                                    comm.Send([u_local[i][-n_local_domain:],
-                                               MPI.DOUBLE],
-                                              dest=0,
-                                              tag=77)
-
-                            if UE_GLOBAL_COMMUNICATE:
-                                if i == (nt - 1):
+                if not ERROR_NORM:
+                    if nprocs > 1:
+                        if rank != 0:
+                            if rank == (nprocs - 1):
+                                if PLOT_TIME_STEP:
                                     comm.Send(
-                                        [ue_local[i][-n_local_domain:], MPI.DOUBLE],
+                                        [u_local[i][-n_local_domain:], MPI.DOUBLE],
                                         dest=0,
-                                        tag=99)
-                        else:
-                            if PLOT_TIME_STEP:
-                                comm.Send([u_local[i][n_local_domain:
-                                                      -n_local_domain],
-                                           MPI.DOUBLE],
-                                          dest=0,
-                                          tag=77)
+                                        tag=77)
+                                else:
+                                    if i == (nt - 1):
+                                        comm.Send([u_local[i][-n_local_domain:],
+                                                   MPI.DOUBLE],
+                                                  dest=0,
+                                                  tag=77)
+
+                                if UE_GLOBAL_COMMUNICATE:
+                                    if i == (nt - 1):
+                                        comm.Send(
+                                            [ue_local[i][-n_local_domain:], MPI.DOUBLE],
+                                            dest=0,
+                                            tag=99)
                             else:
-                                if i == (nt - 1):
+                                if PLOT_TIME_STEP:
                                     comm.Send([u_local[i][n_local_domain:
                                                           -n_local_domain],
                                                MPI.DOUBLE],
                                               dest=0,
                                               tag=77)
+                                else:
+                                    if i == (nt - 1):
+                                        comm.Send([u_local[i][n_local_domain:
+                                                              -n_local_domain],
+                                                   MPI.DOUBLE],
+                                                  dest=0,
+                                                  tag=77)
 
-                            if UE_GLOBAL_COMMUNICATE:
-                                if i == (nt - 1):
-                                    comm.Send(
-                                        [ue_local[i][n_local_domain:
-                                                     -n_local_domain],
-                                         MPI.DOUBLE],
-                                        dest=0,
-                                        tag=99)
+                                if UE_GLOBAL_COMMUNICATE:
+                                    if i == (nt - 1):
+                                        comm.Send(
+                                            [ue_local[i][n_local_domain:
+                                                         -n_local_domain],
+                                             MPI.DOUBLE],
+                                            dest=0,
+                                            tag=99)
 
-                    if rank == 0:
-                        # for now, just used a for loop to receive everything...
-                        # try Gather instead of for loop with blocking
-                        # receives...
-                        #comm.Gather()
+                        if rank == 0:
+                            # for now, just used a for loop to receive everything...
+                            # try Gather instead of for loop with blocking
+                            # receives...
+                            #comm.Gather()
 
-                        start_communication_time = time()
+                            start_communication_time = time()
 
-                        for rank_num in range(1, nprocs):
-                            start_index_inner = rank_num * n_local_domain
-                            end_index_inner = (rank_num + 1) * n_local_domain
+                            for rank_num in range(1, nprocs):
+                                start_index_inner = rank_num * n_local_domain
+                                end_index_inner = (rank_num + 1) * n_local_domain
 
-                            if PLOT_TIME_STEP:
-                                comm.Recv([u_global[i]
-                                           [start_index_inner:end_index_inner],
-                                           MPI.DOUBLE],
-                                          source=rank_num, tag=77)
-                            else:
-                                if i == (nt - 1):
+                                if PLOT_TIME_STEP:
                                     comm.Recv([u_global[i]
-                                               [start_index_inner:
-                                                end_index_inner],
-                                               MPI.DOUBLE],
-                                              source=rank_num, tag=77)
-
-                            if UE_GLOBAL_COMMUNICATE:
-                                if i == (nt - 1):
-                                    comm.Recv([ue_global[i]
                                                [start_index_inner:end_index_inner],
                                                MPI.DOUBLE],
-                                              source=rank_num, tag=99)
+                                              source=rank_num, tag=77)
+                                else:
+                                    if i == (nt - 1):
+                                        comm.Recv([u_global[i]
+                                                   [start_index_inner:
+                                                    end_index_inner],
+                                                   MPI.DOUBLE],
+                                                  source=rank_num, tag=77)
 
-                        end_communication_time = time()
-                else:
-                    # remember to update u_global for 1 process
-                    u_global[i][:] = u_local[i][:]
+                                if UE_GLOBAL_COMMUNICATE:
+                                    if i == (nt - 1):
+                                        comm.Recv([ue_global[i]
+                                                   [start_index_inner:end_index_inner],
+                                                   MPI.DOUBLE],
+                                                  source=rank_num, tag=99)
+
+                            end_communication_time = time()
+                    else:
+                        # remember to update u_global for 1 process
+                        u_global[i][:] = u_local[i][:]
 
                 if PLOT_TIME_STEP:
                     if rank == 0:
@@ -1099,14 +1108,17 @@ if __name__ == "__main__":
                 total_time = end_time - start_time
                 timings_array[timing_index] = total_time
 
-                communication_time = end_communication_time - \
-                                     start_communication_time
+                if not ERROR_NORM:
+                    communication_time = end_communication_time - \
+                                         start_communication_time
 
                 sys.stderr.write(f"timing {timing_index}: {total_time}\n")
-                sys.stderr.write(f"communication time -- last time step to "
-                                 f"calculate error: {communication_time}\n")
-                sys.stderr.write(f"percentage of communication: "
-                                 f"{(communication_time / total_time) * 100}\n")
+
+                if not ERROR_NORM:
+                    sys.stderr.write(f"communication time -- last time step to "
+                                     f"calculate error: {communication_time}\n")
+                    sys.stderr.write(f"percentage of communication: "
+                                     f"{(communication_time / total_time) * 100}\n")
 
                 # stores the timings in a file with format
                 # {num_processes} {timing}
@@ -1119,6 +1131,24 @@ if __name__ == "__main__":
                     # job is killed...
                     time_file.close()
 
+            if ERROR_NORM:
+                if rank == 0:
+                    error_local = (u_local[-1][:n_local_domain] -
+                                   ue_local[-1][:n_local_domain]).reshape(-1, )
+                elif rank == (nprocs - 1):
+                    error_local = (u_local[-1][-n_local_domain:] -
+                                   ue_local[-1][-n_local_domain:]).reshape(-1, )
+                else:
+                    error_local = (u_local[-1][n_local_domain:
+                                               -n_local_domain] -
+                                   ue_local[-1][n_local_domain:
+                                                -n_local_domain]).reshape(-1, )
+
+                # sys.stderr.write(f"rank: {rank}\n")
+                # sys.stderr.write(f"error local: {error_local}\n")
+
+                e = norm(error_local, comm)
+
             if rank == 0:
                 if FINAL_DEBUG:
                     print(f"final u (backward euler): {u_global[-1, :]}")
@@ -1130,17 +1160,25 @@ if __name__ == "__main__":
 
                     print(f"ue_global: {ue_global}")
 
-                # Compute L2-norm of the error at final time
-                e = (u_global[-1, :] - ue_global[-1, :]).reshape(-1, )
-                enorm = linalg.norm(
-                    e) * h  # Task: compute the L2 norm over space-time
-                # here.  In serial this is just one line.  In parallel...
-                # Parallel task: In parallel, write a helper function to compute the norm of "e" in parallel
+                if ERROR_NORM:
+                    enorm = linalg.norm(e) * h
 
-                # change print to sys.stderr.write
-                sys.stderr.write("Nt, N, Error is:  " + str(nt) + ",  " + str(n)
-                                 + ",  " + str(enorm) + "\n")
-                error.append(enorm)
+                    sys.stderr.write(
+                        "Nt, N, Error is:  " + str(nt) + ",  " + str(n)
+                        + ",  " + str(enorm) + "\n")
+                    error.append(enorm)
+                else:
+                    # Compute L2-norm of the error at final time
+                    e = (u_global[-1, :] - ue_global[-1, :]).reshape(-1, )
+                    enorm = linalg.norm(
+                        e) * h  # Task: compute the L2 norm over space-time
+                    # here.  In serial this is just one line.  In parallel...
+                    # Parallel task: In parallel, write a helper function to compute the norm of "e" in parallel
+
+                    # change print to sys.stderr.write
+                    sys.stderr.write("Nt, N, Error is:  " + str(nt) + ",  " + str(n)
+                                     + ",  " + str(enorm) + "\n")
+                    error.append(enorm)
 
             # You can turn this on to visualize the solution.  Possibly helpful for debugging.
             # Only works in serial.  Parallel visualizations will require that you stitch together

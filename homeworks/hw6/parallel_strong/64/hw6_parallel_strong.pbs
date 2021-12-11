@@ -13,7 +13,7 @@
 ## This is the max run-time allowed  hr:min:sec
 ###PBS -l walltime=00:30:00 
 ### Fill out the walltime later in the shell script...need more time for the 5 timings...
-#PBS -l walltime=01:30:00
+#PBS -l walltime=02:30:00
 
 
 ## The debug queue will likely be faster, but if your code takes more than 5 or
