@@ -511,9 +511,9 @@ if __name__ == "__main__":
     # so, the number of processes to be used are 2, 4, 8, 16, 32, 64
     # scale T so that the ratio ht/h**2 stays around 4 for all four
     # cases
-    # Nt_values = array([1024])  # 1024
-    # N_values = array([512])  # 512
-    # T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
+    Nt_values = array([1024])  # 1024
+    N_values = array([512])  # 512
+    T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
 
     # IMPORTANT: reduced the time quite a bit -- problem seems to be
     # calculating uexact for the ENTIRE grid on process 0 at EACH TIME STEP
@@ -522,10 +522,10 @@ if __name__ == "__main__":
     # # Nt_values = array([16 * (4 ** power)])  # 16 -- initial
     # # N_values = array([48 * (2 ** power)])  # 48 -- initial
     # # test -- debug
-    power = int(log(nprocs) / log(4))
-    Nt_values = array([12 * (4 ** power)])  # 16 -- initial
-    N_values = array([8 * (2 ** power)])  # 48 -- initial
-    T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
+    # power = int(log(nprocs) / log(4))
+    # Nt_values = array([12 * (4 ** power)])  # 16 -- initial
+    # N_values = array([8 * (2 ** power)])  # 48 -- initial
+    # T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
 
     # keep track of all the timings to find the min time at the end
     timings_array = zeros((ntimings, ))
