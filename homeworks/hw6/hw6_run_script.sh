@@ -251,7 +251,7 @@ function run_script_cannon {
 # ;; vs exit;; (one continues and the other exits)
 
 # OPTIONS
-while getopts ":a:p:w:s:" args; do
+while getopts ":hap:w:s:" args; do
 	case $args in 
 	h)
 		echo "============================================================================================="
