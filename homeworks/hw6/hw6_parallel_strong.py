@@ -519,10 +519,10 @@ if __name__ == "__main__":
     # calculating uexact for the ENTIRE grid on process 0 at EACH TIME STEP
 
     # Weak scaling debug -- compare timings...
-    # power = int(log(nprocs) / log(4))
     # # Nt_values = array([16 * (4 ** power)])  # 16 -- initial
     # # N_values = array([48 * (2 ** power)])  # 48 -- initial
     # # test -- debug
+    power = int(log(nprocs) / log(4))
     Nt_values = array([12 * (4 ** power)])  # 16 -- initial
     N_values = array([8 * (2 ** power)])  # 48 -- initial
     T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
