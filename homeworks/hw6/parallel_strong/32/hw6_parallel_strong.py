@@ -264,6 +264,15 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
 
 def neighbor_communication(x, n_local, comm):
     # communication only with more than 1 processes...
+
+    if JACOBI_DEBUG:
+        if rank == 0:
+            sys.stderr.write(f"during neighbor communication...\n")
+
+        sys.stderr.write(f"rank: {rank}\n")
+        sys.stderr.write(f"x: {x}\n")
+        sys.stderr.write(f"x shape: {x.shape}\n")
+
     if nprocs > 1:
         # Send to top neighbor (if not rank 0)
         # rank - 1
@@ -349,7 +358,15 @@ def jacobi_step(A, x, b, D_inv, n_local, comm):
     # different from the others)
     # --> Pay attention to the data-type
 
+    if JACOBI_DEBUG:
+        if rank == 0:
+            sys.stderr.write(f"before neighbor communication:\n")
+
     neighbor_communication(x, n_local, comm)
+
+    if JACOBI_DEBUG:
+        if rank == 0:
+            sys.stderr.write(f"after neighbor communication:\n")
 
     # (I - A*D_inv)*x
     # A is G in this case
@@ -497,6 +514,18 @@ if __name__ == "__main__":
     Nt_values = array([1024])  # 1024
     N_values = array([512])  # 512
     T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
+
+    # IMPORTANT: reduced the time quite a bit -- problem seems to be
+    # calculating uexact for the ENTIRE grid on process 0 at EACH TIME STEP
+
+    # Weak scaling debug -- compare timings...
+    # power = int(log(nprocs) / log(4))
+    # # Nt_values = array([16 * (4 ** power)])  # 16 -- initial
+    # # N_values = array([48 * (2 ** power)])  # 48 -- initial
+    # # test -- debug
+    # Nt_values = array([12 * (4 ** power)])  # 16 -- initial
+    # N_values = array([8 * (2 ** power)])  # 48 -- initial
+    # T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
 
     # keep track of all the timings to find the min time at the end
     timings_array = zeros((ntimings, ))
@@ -1148,9 +1177,10 @@ if __name__ == "__main__":
 
                     # pyplot.show()
 
-    with open(f"{parallel_root}timings.txt", "a+") as time_file:
-        time_file.write(f"min time: {min(timings_array)}\n")
-        time_file.close()
+    if rank == 0:
+        with open(f"{parallel_root}timings.txt", "a+") as time_file:
+            time_file.write(f"min time: {min(timings_array)}\n")
+            time_file.close()
 
     # Plot convergence
     # Need to plot the weak scaling MANUALLY after all runs are completed in
