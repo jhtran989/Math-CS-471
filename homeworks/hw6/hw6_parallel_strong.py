@@ -966,23 +966,28 @@ if __name__ == "__main__":
                         if UE_GLOBAL_COMMUNICATE:
                             ue_global[i][start_index:end_index] = \
                                 uexact(t, X, Y)[:n_local_domain]
-                            ue_global[i][start_index:end_index] = \
-                                uexact(t, X, Y)[:n_local_domain]
+
+                            # wait...there's the same instruction below...
+                            # ue_global[i][start_index:end_index] = \
+                            #     uexact(t, X, Y)[:n_local_domain]
                         else:
                             ue_global[i][:] = uexact(t, X_global, Y_global)
                 else:
                     if UE_GLOBAL_COMMUNICATE:
                         if i == (nt - 1):
-                            if rank == (nprocs - 1):
-                                # ue_local[i][start_index:end_index] = \
-                                #     uexact(t, X, Y)[-n_local_domain:]
-                                ue_local[i][:] = \
-                                    uexact(t, X, Y)[:]
-                            else:
-                                # ue_local[i][start_index:end_index] = \
-                                #     uexact(t, X, Y)[n_local_domain:-n_local_domain]
-                                ue_local[i][:] = \
-                                    uexact(t, X, Y)[:]
+                            # if rank == (nprocs - 1):
+                            #     # ue_local[i][start_index:end_index] = \
+                            #     #     uexact(t, X, Y)[-n_local_domain:]
+                            #     ue_local[i][:] = \
+                            #         uexact(t, X, Y)[:]
+                            # else:
+                            #     # ue_local[i][start_index:end_index] = \
+                            #     #     uexact(t, X, Y)[n_local_domain:-n_local_domain]
+                            #     ue_local[i][:] = \
+                            #         uexact(t, X, Y)[:]
+
+                            ue_local[i][:] = \
+                                uexact(t, X, Y)[:]
 
                 if TIME_DEBUG:
                     print("g", g)
@@ -1038,6 +1043,13 @@ if __name__ == "__main__":
                                         tag=99)
 
                     if rank == 0:
+                        # for now, just used a for loop to receive everything...
+                        # try Gather instead of for loop with blocking
+                        # receives...
+                        #comm.Gather()
+
+                        start_communication_time = time()
+
                         for rank_num in range(1, nprocs):
                             start_index_inner = rank_num * n_local_domain
                             end_index_inner = (rank_num + 1) * n_local_domain
@@ -1061,6 +1073,8 @@ if __name__ == "__main__":
                                                [start_index_inner:end_index_inner],
                                                MPI.DOUBLE],
                                               source=rank_num, tag=99)
+
+                        end_communication_time = time()
                 else:
                     # remember to update u_global for 1 process
                     u_global[i][:] = u_local[i][:]
@@ -1085,7 +1099,14 @@ if __name__ == "__main__":
                 total_time = end_time - start_time
                 timings_array[timing_index] = total_time
 
+                communication_time = end_communication_time - \
+                                     start_communication_time
+
                 sys.stderr.write(f"timing {timing_index}: {total_time}\n")
+                sys.stderr.write(f"communication time -- last time step to "
+                                 f"calculate error: {communication_time}\n")
+                sys.stderr.write(f"percentage of communication: "
+                                 f"{(communication_time / total_time) * 100}\n")
 
                 # stores the timings in a file with format
                 # {num_processes} {timing}
