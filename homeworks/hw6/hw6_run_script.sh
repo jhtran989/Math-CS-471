@@ -149,16 +149,16 @@ function run_parallel_strong_script() {
 	
 	# increase time a lot for final results...
 	if (( $num_processes > 8 )); then
-		num_hours="01"
+		num_hours="02"
 		num_minutes="30"
 	elif (( $num_processes == 8 )); then
-		num_hours="02"
-		num_minutes="15"
-	elif (( $num_processes == 4 )); then
 		num_hours="03"
 		num_minutes="45"
-	else # assumed to be 2 processes...
+	elif (( $num_processes == 4 )); then
 		num_hours="05"
+		num_minutes="45"
+	else # assumed to be 2 processes...
+		num_hours="07"
 		num_minutes="35"
 	fi
 	
