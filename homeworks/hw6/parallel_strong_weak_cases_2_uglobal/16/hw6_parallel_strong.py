@@ -511,21 +511,21 @@ if __name__ == "__main__":
     # so, the number of processes to be used are 2, 4, 8, 16, 32, 64
     # scale T so that the ratio ht/h**2 stays around 4 for all four
     # cases
-    Nt_values = array([1024])  # 1024
-    N_values = array([512])  # 512
-    T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
+    # Nt_values = array([1024])  # 1024
+    # N_values = array([512])  # 512
+    # T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
 
     # IMPORTANT: reduced the time quite a bit -- problem seems to be
     # calculating uexact for the ENTIRE grid on process 0 at EACH TIME STEP
 
     # Weak scaling debug -- compare timings...
-    # power = int(log(nprocs) / log(4))
     # # Nt_values = array([16 * (4 ** power)])  # 16 -- initial
     # # N_values = array([48 * (2 ** power)])  # 48 -- initial
     # # test -- debug
-    # Nt_values = array([12 * (4 ** power)])  # 16 -- initial
-    # N_values = array([8 * (2 ** power)])  # 48 -- initial
-    # T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
+    power = int(log(nprocs) / log(4))
+    Nt_values = array([12 * (4 ** power)])  # 16 -- initial
+    N_values = array([8 * (2 ** power)])  # 48 -- initial
+    T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
 
     # keep track of all the timings to find the min time at the end
     timings_array = zeros((ntimings, ))
@@ -942,9 +942,25 @@ if __name__ == "__main__":
                 # wait, just don't keep track of uexact entirely...only
                 # needed at the end to calculate the error...
                 UE_GLOBAL_COMMUNICATE = True
+
+                # also, to further reduce the time, the values of u are only
+                # communicated ON THE LAST TIME STEP instead of EVERY TIME
+                # STEP (one way communication since all the values are sent
+                # to process 0) -- hopefully this works...
+
+                # steps to reduce time
+                # - parallelize the uexact (and only on last time step) --
+                # ue_global
+                # - send values of local u to process 0 only on last time
+                # step -- u_global
                 if rank == 0:
-                    u_global[i][start_index:end_index] = u_local[i][
+                    if PLOT_TIME_STEP:
+                        u_global[i][start_index:end_index] = u_local[i][
                                                          start_index:end_index]
+                    else:
+                        if i == (nt - 1):
+                            u_global[i][start_index:end_index] = \
+                                u_local[i][start_index:end_index]
 
                     if i == (nt - 1):
                         if UE_GLOBAL_COMMUNICATE:
@@ -979,9 +995,17 @@ if __name__ == "__main__":
                 if nprocs > 1:
                     if rank != 0:
                         if rank == (nprocs - 1):
-                            comm.Send([u_local[i][-n_local_domain:], MPI.DOUBLE],
-                                      dest=0,
-                                      tag=77)
+                            if PLOT_TIME_STEP:
+                                comm.Send(
+                                    [u_local[i][-n_local_domain:], MPI.DOUBLE],
+                                    dest=0,
+                                    tag=77)
+                            else:
+                                if i == (nt - 1):
+                                    comm.Send([u_local[i][-n_local_domain:],
+                                               MPI.DOUBLE],
+                                              dest=0,
+                                              tag=77)
 
                             if UE_GLOBAL_COMMUNICATE:
                                 if i == (nt - 1):
@@ -990,11 +1014,19 @@ if __name__ == "__main__":
                                         dest=0,
                                         tag=99)
                         else:
-                            comm.Send([u_local[i][n_local_domain:
-                                                  -n_local_domain],
-                                       MPI.DOUBLE],
-                                      dest=0,
-                                      tag=77)
+                            if PLOT_TIME_STEP:
+                                comm.Send([u_local[i][n_local_domain:
+                                                      -n_local_domain],
+                                           MPI.DOUBLE],
+                                          dest=0,
+                                          tag=77)
+                            else:
+                                if i == (nt - 1):
+                                    comm.Send([u_local[i][n_local_domain:
+                                                          -n_local_domain],
+                                               MPI.DOUBLE],
+                                              dest=0,
+                                              tag=77)
 
                             if UE_GLOBAL_COMMUNICATE:
                                 if i == (nt - 1):
@@ -1010,10 +1042,18 @@ if __name__ == "__main__":
                             start_index_inner = rank_num * n_local_domain
                             end_index_inner = (rank_num + 1) * n_local_domain
 
-                            comm.Recv([u_global[i]
-                                       [start_index_inner:end_index_inner],
-                                       MPI.DOUBLE],
-                                      source=rank_num, tag=77)
+                            if PLOT_TIME_STEP:
+                                comm.Recv([u_global[i]
+                                           [start_index_inner:end_index_inner],
+                                           MPI.DOUBLE],
+                                          source=rank_num, tag=77)
+                            else:
+                                if i == (nt - 1):
+                                    comm.Recv([u_global[i]
+                                               [start_index_inner:
+                                                end_index_inner],
+                                               MPI.DOUBLE],
+                                              source=rank_num, tag=77)
 
                             if UE_GLOBAL_COMMUNICATE:
                                 if i == (nt - 1):
@@ -1087,7 +1127,9 @@ if __name__ == "__main__":
             # But, you can use the imshow command for your report graphics, as done below.
             ORIGINAL = False
             if rank == 0:
-                if True:
+                if PLOT_TIME_STEP:  # to reduce time even further, ignore
+                    # creating the plots and communication of local portion
+                    # of u above...
                     pyplot.figure(-1)
                     pyplot.imshow(u_global[0, :].reshape(n, n), origin='lower',
                                   extent=(0, 1, 0, 1))

@@ -1,27 +1,27 @@
 Wheeler Portable Batch System Prologue
-Job Id: 1731261.wheeler-sn.alliance.unm.edu
+Job Id: 1731288.wheeler-sn.alliance.unm.edu
 Username: jtran989
-Job 1731261.wheeler-sn.alliance.unm.edu running on nodes:
-wheeler157 wheeler156 wheeler155 wheeler153 wheeler151 wheeler150 wheeler149 wheeler141 
+Job 1731288.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler218 wheeler214 wheeler208 wheeler203 wheeler198 wheeler185 wheeler184 wheeler182 
 
-prologue running on host: wheeler157
-Agent pid 5049
+prologue running on host: wheeler218
+Agent pid 8313
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-Agent pid 10570
+Agent pid 8178
+Agent pid 9617
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-Agent pid 567
+Agent pid 30458
+Agent pid 29196
+Agent pid 20760
+Agent pid 21853
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-Agent pid 31030
-Agent pid 13950
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-Agent pid 19523
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-Agent pid 22684
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-Agent pid 30530
+Agent pid 31142
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-timing 0: 703.89013838768
-Nt, N, Error is:  1024,  512,  4.659889736972294e-08
+timing 0: 117.23068332672119
+Nt, N, Error is:  768,  64,  3.1176407780508304e-06
 number of processes: 64
 Wheeler Portable Batch System Epilogue
