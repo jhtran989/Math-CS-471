@@ -913,32 +913,34 @@ if __name__ == "__main__":
                     print(f"u (backward euler): {u_local[i, :]}")
                     print(f"u (exact): {ue_local[i, :]}")
 
-                if nprocs > 1:
-                    if rank != 0:
-                        if rank == (nprocs - 1):
-                            comm.Send([u_local[i][-n_local_domain:], MPI.DOUBLE],
-                                      dest=0,
-                                      tag=77)
-                        else:
-                            comm.Send([u_local[i][n_local_domain:-n_local_domain],
-                                       MPI.DOUBLE],
-                                      dest=0,
-                                      tag=77)
-
-                    if rank == 0:
-                        for rank_num in range(1, nprocs):
-                            start_index_inner = rank_num * n_local_domain
-                            end_index_inner = (rank_num + 1) * n_local_domain
-
-                            comm.Recv([u_global[i]
-                                       [start_index_inner:end_index_inner],
-                                       MPI.DOUBLE],
-                                      source=rank_num, tag=77)
-                else:
-                    # remember to update u_global for 1 process
-                    u_global[i][:] = u_local[i][:]
-
+                # added the communication under condition as well to reduce
+                # total runtime
                 if PLOT_TIME_STEP:
+                    if nprocs > 1:
+                        if rank != 0:
+                            if rank == (nprocs - 1):
+                                comm.Send([u_local[i][-n_local_domain:], MPI.DOUBLE],
+                                          dest=0,
+                                          tag=77)
+                            else:
+                                comm.Send([u_local[i][n_local_domain:-n_local_domain],
+                                           MPI.DOUBLE],
+                                          dest=0,
+                                          tag=77)
+
+                        if rank == 0:
+                            for rank_num in range(1, nprocs):
+                                start_index_inner = rank_num * n_local_domain
+                                end_index_inner = (rank_num + 1) * n_local_domain
+
+                                comm.Recv([u_global[i]
+                                           [start_index_inner:end_index_inner],
+                                           MPI.DOUBLE],
+                                          source=rank_num, tag=77)
+                    else:
+                        # remember to update u_global for 1 process
+                        u_global[i][:] = u_local[i][:]
+
                     if rank == 0:
                         pyplot.figure(i)
                         pyplot.imshow(u_global[i, :].reshape(n, n), origin='lower',
@@ -964,6 +966,12 @@ if __name__ == "__main__":
                 # {num_processes} {timing}
                 with open(f"{parallel_root}timings.txt", "a+") as time_file:
                     time_file.write(f"{nprocs} {total_time}\n")
+
+                    # make sure to close file after writing...
+                    # for some reason, the file won't be transferred over if
+                    # not closed when the walltime has been reached and the
+                    # job is killed...
+                    time_file.close()
 
             if rank == 0:
                 if FINAL_DEBUG:
@@ -1086,6 +1094,7 @@ if __name__ == "__main__":
 
     with open(f"{parallel_root}timings.txt", "a+") as time_file:
         time_file.write(f"min time: {min(timings_array)}\n")
+        time_file.close()
 
     # Plot convergence
     # Need to plot the weak scaling MANUALLY after all runs are completed in
