@@ -36,6 +36,11 @@ num_elements_ten=10000
 poisson_python="poisson.py"
 
 # Error plot to test convergence -- REMEMBER TO UPDATE BELOW
+serial_error_dir="serial_error/"
+serial_error_script="hw6_serial_error.pbs"
+serial_error_python="hw6_serial_error.py"
+
+# Error plot to test convergence -- REMEMBER TO UPDATE BELOW
 parallel_error_dir="parallel_error/"
 parallel_error_script="hw6_parallel_error.pbs"
 parallel_error_python="hw6_parallel_error.py"
@@ -49,6 +54,30 @@ parallel_weak_python="hw6_parallel_weak.py"
 parallel_strong_dir="parallel_strong/"
 parallel_strong_script="hw6_parallel_strong.pbs"
 parallel_strong_python="hw6_parallel_strong.py"
+
+# changed from run_script_inner_prod
+function run_serial_error_script() {
+	#move module load to the job script as well
+	#module load mpich-3.2-gcc-4.8.5-7ebkszx
+	
+	# clean out directory to remove any artifacts from past debug/run session
+	[[ -d ${serial_error_dir} ]] && rm -r ${serial_error_dir}
+	
+	mkdir -p ${serial_error_dir}
+	cd ${serial_error_dir}
+	
+	# copy shell script to current dir
+	cp ${up}${serial_error_script} ${serial_error_script}
+	
+	# copy python script to current dir
+	cp ${up}${serial_error_python} ${serial_error_python}
+	cp ${up}${poisson_python} ${poisson_python}
+	
+	# escape '$' with '\' since there are some variables only seen in the .pbs script
+	sed -i "81 i python ${serial_error_python}" ${serial_error_script}
+	
+	qsub ${serial_error_script}
+}
 
 # changed from run_script_inner_prod
 function run_parallel_error_script() {
