@@ -163,7 +163,7 @@ function run_parallel_strong_script() {
 	
 	# escape '$' with '\' since there are some variables only seen in the .pbs script
 	sed -i "10 i #PBS -lnodes=${num_nodes}:ppn=${num_processes_per_node}" ${parallel_strong_script}
-	sed -i "16 i #PBS -l walltime=00:${num_hours}:${num_minutes}" ${parallel_strong_script}
+	sed -i "16 i #PBS -l walltime=${num_hours}:${num_minutes}:00" ${parallel_strong_script}
 	sed -i "86 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_strong_python}" ${parallel_strong_script}
 	
 	qsub ${parallel_strong_script}
