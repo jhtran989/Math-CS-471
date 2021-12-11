@@ -13,10 +13,10 @@ import sys
 from time import time
 
 global_maxiter = 400  # go through code and refactor
-global_tol = 1e-15  # 1e-10
+global_tol = 1e-10  # 1e-15 -- takes way to long for the strong scaling...
 
 # Strong scaling -- repeat each 5 times and take the smallest of the 5 times
-ntimings = 5
+ntimings = 1  # changed from 5...each timing is too long for some reason
 
 # MPI Stuff
 comm = MPI.COMM_WORLD
@@ -28,7 +28,10 @@ nprocs = comm.size
 parallel_root = f"parallel/"
 # parallel_plots_dir = f"{parallel_root}plots/"
 # os.makedirs(parallel_plots_dir, exist_ok=True)
-os.makedirs(parallel_root, exist_ok=True)
+
+if rank == 0:  # reduce any clashes when multiples processes try to make the
+    # directory...
+    os.makedirs(parallel_root, exist_ok=True)
 
 # move to main below
 # os.makedirs(parallel_plots_dir, exist_ok=True)
@@ -491,8 +494,8 @@ if __name__ == "__main__":
     # so, the number of processes to be used are 2, 4, 8, 16, 32, 64
     # scale T so that the ratio ht/h**2 stays around 4 for all four
     # cases
-    Nt_values = array([1024])  # 1024
-    N_values = array([512])  # 512
+    Nt_values = array([12])  # 1024
+    N_values = array([8])  # 512
     T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
 
     # keep track of all the timings to find the min time at the end
@@ -552,7 +555,9 @@ if __name__ == "__main__":
             parallel_root_current = f"{parallel_root}nprocs={nprocs},n={n}," \
                                     f"nt={nt},T={T}/"
             parallel_plots_dir_current = f"{parallel_root_current}plots/"
-            os.makedirs(parallel_plots_dir_current, exist_ok=True)
+
+            if rank == 0:  # again, reduce clashing when trying to create it
+                os.makedirs(parallel_plots_dir_current, exist_ok=True)
 
             # Declare time step size
             t0 = 0.0
@@ -903,10 +908,20 @@ if __name__ == "__main__":
                 # no need to communicate since the values are calculated from the
                 # function (designate process 0 to contain the exact values for
                 # the entire grid...)
+                # maybe this is where a good chunk of time is spent...with
+                # the global version
+                # wait, just don't keep track of uexact entirely...only
+                # needed at the end to calculate the error...
                 if rank == 0:
                     u_global[i][start_index:end_index] = u_local[i][
                                                          start_index:end_index]
-                    ue_global[i][:] = uexact(t, X_global, Y_global)
+                    #ue_global[i][:] = uexact(t, X_global, Y_global)
+                    if i == (nt - 1):
+                        ue_global[i][start_index:end_index] = \
+                            uexact(t, X, Y)
+                else:
+                    if i == (nt - 1):
+                        ue_local[i][start_index:end_index] = uexact(t, X, Y)
 
                 if TIME_DEBUG:
                     print("g", g)
@@ -922,11 +937,26 @@ if __name__ == "__main__":
                                 comm.Send([u_local[i][-n_local_domain:], MPI.DOUBLE],
                                           dest=0,
                                           tag=77)
+
+                                if i == (nt - 1):
+                                    comm.Send(
+                                        [ue_local[i][-n_local_domain:], MPI.DOUBLE],
+                                        dest=0,
+                                        tag=99)
                             else:
-                                comm.Send([u_local[i][n_local_domain:-n_local_domain],
+                                comm.Send([u_local[i][n_local_domain:
+                                                      -n_local_domain],
                                            MPI.DOUBLE],
                                           dest=0,
                                           tag=77)
+
+                                if i == (nt - 1):
+                                    comm.Send(
+                                        [ue_local[i][n_local_domain:
+                                                     -n_local_domain],
+                                         MPI.DOUBLE],
+                                        dest=0,
+                                        tag=99)
 
                         if rank == 0:
                             for rank_num in range(1, nprocs):
@@ -937,6 +967,12 @@ if __name__ == "__main__":
                                            [start_index_inner:end_index_inner],
                                            MPI.DOUBLE],
                                           source=rank_num, tag=77)
+
+                                if i == (nt - 1):
+                                    comm.Recv([ue_global[i]
+                                               [start_index_inner:end_index_inner],
+                                               MPI.DOUBLE],
+                                              source=rank_num, tag=99)
                     else:
                         # remember to update u_global for 1 process
                         u_global[i][:] = u_local[i][:]
