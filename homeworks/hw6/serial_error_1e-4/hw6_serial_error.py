@@ -24,9 +24,6 @@ os.makedirs(serial_plots_dir, exist_ok=True)
 PLOT_TIME_STEP = False
 FINAL_DEBUG = False
 
-# print convergence check
-CONVERGENCE_CHECK = True
-
 '''
     # Problem Preliminary: MPI cheat sheet
     
@@ -144,6 +141,9 @@ def jacobi(A, b, x0, tol, maxiter):
     ------
     x <array>       : Solution to A x = b
     '''
+
+    # print convergence check
+    CONVERGENCE_CHECK = False
 
     # This useful function returns an array containing diag(A)
     D = A.diagonal()
