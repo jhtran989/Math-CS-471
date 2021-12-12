@@ -13,7 +13,7 @@ import sys
 from time import time
 
 global_maxiter = 400  # go through code and refactor
-global_tol = 1e-15  # 1e-10
+global_tol = 1e-4  # 1e-15 1e-10
 
 # MPI Stuff
 comm = MPI.COMM_WORLD
@@ -25,7 +25,10 @@ nprocs = comm.size
 parallel_root = f"parallel/"
 # parallel_plots_dir = f"{parallel_root}plots/"
 # os.makedirs(parallel_plots_dir, exist_ok=True)
-os.makedirs(parallel_root, exist_ok=True)
+
+if rank == 0:  # reduce any clashes when multiples processes try to make the
+    # directory...
+    os.makedirs(parallel_root, exist_ok=True)
 
 # move to main below
 # os.makedirs(parallel_plots_dir, exist_ok=True)
@@ -489,8 +492,11 @@ if __name__ == "__main__":
     # scale with Nt_values so each process should get ~2000 values each
     # actually, could determine the Nt and N values from number of processes...
     power = int(log(nprocs) / log(4))
-    Nt_values = array([16 * (4 ** power)])  # 16 -- initial
-    N_values = array([48 * (2 ** power)])  # 48 -- initial
+    # Nt_values = array([16 * (4 ** power)])  # 16 -- initial
+    # N_values = array([48 * (2 ** power)])  # 48 -- initial
+    # test -- debug
+    Nt_values = array([12 * (4 ** power)])  # 16 -- initial
+    N_values = array([8 * (2 ** power)])  # 48 -- initial
     T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
 
     # Initial stuff (comm)
@@ -545,7 +551,10 @@ if __name__ == "__main__":
         parallel_root_current = f"{parallel_root}nprocs={nprocs},n={n}," \
                                 f"nt={nt},T={T}/"
         parallel_plots_dir_current = f"{parallel_root_current}plots/"
-        os.makedirs(parallel_plots_dir_current, exist_ok=True)
+
+        if rank == 0:  # reduce any clashes when multiples processes try to make the
+            # directory...
+            os.makedirs(parallel_plots_dir_current, exist_ok=True)
 
         # Declare time step size
         t0 = 0.0
@@ -806,9 +815,10 @@ if __name__ == "__main__":
             # ERROR - DON'T use t0 (only initial iteration)
 
             if TIME_DEBUG:
-                print(f"------------------------------")
-                print("t", t)
-                print("i (time)", i)
+                if rank == 0:
+                    print(f"------------------------------")
+                    print("t", t)
+                    print("i (time)", i)
 
             # Task: We need to store the exact solution so that we can compute the error
             # print("ue.shape", ue.shape)
@@ -837,7 +847,8 @@ if __name__ == "__main__":
             boundary_points = abs(Y - h) < cut
 
             if TIME_DEBUG:
-                print(f"boundary points: {boundary_points}")
+                if rank == 0:
+                    print(f"boundary points: {boundary_points}")
             # g[boundary_points] += (1 / h ** 2) * uexact(t,
             # X[boundary_points], Y[boundary_points] - h)
             g[boundary_points] += uexact(t, X[boundary_points],
@@ -846,7 +857,8 @@ if __name__ == "__main__":
             boundary_points = abs(Y - (1 - h)) < cut
 
             if TIME_DEBUG:
-                print(f"boundary points: {boundary_points}")
+                if rank == 0:
+                    print(f"boundary points: {boundary_points}")
             # g[boundary_points] += (1 / h ** 2) * uexact(t,
             # X[boundary_points], Y[boundary_points] + h)
             g[boundary_points] += uexact(t, X[boundary_points],
@@ -855,7 +867,8 @@ if __name__ == "__main__":
             boundary_points = abs(X - h) < cut
 
             if TIME_DEBUG:
-                print(f"boundary points: {boundary_points}")
+                if rank == 0:
+                    print(f"boundary points: {boundary_points}")
             # g[boundary_points] += (1 / h ** 2) * uexact(t,
             # X[boundary_points] - h, Y[boundary_points])
             g[boundary_points] += uexact(t, X[boundary_points] - h,
@@ -864,7 +877,8 @@ if __name__ == "__main__":
             boundary_points = abs(X - (1 - h)) < cut
 
             if TIME_DEBUG:
-                print(f"boundary points: {boundary_points}")
+                if rank == 0:
+                    print(f"boundary points: {boundary_points}")
             # g[boundary_points] += (1 / h ** 2) * uexact(t,
             # X[boundary_points] + h, Y[boundary_points])
             g[boundary_points] += uexact(t, X[boundary_points] + h,
@@ -902,9 +916,10 @@ if __name__ == "__main__":
                 ue_global[i][:] = uexact(t, X_global, Y_global)
 
             if TIME_DEBUG:
-                print("g", g)
-                print(f"u (backward euler): {u_local[i, :]}")
-                print(f"u (exact): {ue_local[i, :]}")
+                if rank == 0:
+                    print("g", g)
+                    print(f"u (backward euler): {u_local[i, :]}")
+                    print(f"u (exact): {ue_local[i, :]}")
 
             if nprocs > 1:
                 if rank != 0:
@@ -956,6 +971,7 @@ if __name__ == "__main__":
             # {num_processes} {timing}
             with open(f"{parallel_root}timings.txt", "a+") as time_file:
                 time_file.write(f"{nprocs} {total_time}\n")
+                time_file.close()
 
         if rank == 0:
             if FINAL_DEBUG:
