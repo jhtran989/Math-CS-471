@@ -524,7 +524,7 @@ if __name__ == "__main__":
     # scale T so that the ratio ht/h**2 stays around 4 for all four
     # cases
     Nt_values = array([1024])  # 1024
-    N_values = array([256])  # 512
+    N_values = array([512])  # 512
     T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
 
     # IMPORTANT: reduced the time quite a bit -- problem seems to be

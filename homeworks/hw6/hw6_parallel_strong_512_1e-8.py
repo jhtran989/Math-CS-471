@@ -13,7 +13,7 @@ import sys
 from time import time
 
 global_maxiter = 400  # go through code and refactor
-global_tol = 1e-4  # 1e-10 1e-15 -- takes way to long for the strong scaling...
+global_tol = 1e-8  # 1e-10 1e-15 -- takes way to long for the strong scaling...
 
 # Strong scaling -- repeat each 5 times and take the smallest of the 5 times
 ntimings = 1  # changed from 5...each timing is too long for some reason
@@ -524,7 +524,7 @@ if __name__ == "__main__":
     # scale T so that the ratio ht/h**2 stays around 4 for all four
     # cases
     Nt_values = array([1024])  # 1024
-    N_values = array([256])  # 512
+    N_values = array([512])  # 512
     T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
 
     # IMPORTANT: reduced the time quite a bit -- problem seems to be

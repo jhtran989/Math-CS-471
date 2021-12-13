@@ -322,6 +322,11 @@ if __name__ == "__main__":
     # N_values = array([8 * (2 ** 2)])  # 16
     T = 0.75  # 0.5
 
+    print(f"number of processes: {nprocs}\n")
+    print(f"Nt values: {Nt_values}\n")
+    print(f"N values: {N_values}\n")
+    print(f"T: {T}\n")
+
     # Parallel Task: Change T and the problem sizes for the weak and strong scaling studies
     #
     # For instance, for the strong scaling, you'll want
