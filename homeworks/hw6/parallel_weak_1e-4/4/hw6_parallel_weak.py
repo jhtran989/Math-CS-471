@@ -13,17 +13,13 @@ import sys
 from time import time
 
 global_maxiter = 400  # go through code and refactor
-global_tol = 1e-5  # 1e-15 1e-10
+global_tol = 1e-4  # 1e-15 1e-10
 
 # MPI Stuff
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
 nprocs = comm.size
-
-# print tol
-if rank == 0:
-    sys.stderr.write(f"tol: {global_tol}\n")
 
 # Plots Stuff
 parallel_root = f"parallel/"

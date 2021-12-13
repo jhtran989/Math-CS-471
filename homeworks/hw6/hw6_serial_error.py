@@ -10,7 +10,7 @@ import os
 
 
 global_maxiter = 400  # go through code and refactor
-global_tol = 1e-4  # 1e-10, 1e-15
+global_tol = 1e-5  # 1e-10, 1e-15
 
 print(f"tol: {global_tol}")
 
