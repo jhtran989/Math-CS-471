@@ -1,11 +1,10 @@
 Wheeler Portable Batch System Prologue
-Job Id: 1731406.wheeler-sn.alliance.unm.edu
+Job Id: 1732860.wheeler-sn.alliance.unm.edu
 Username: jtran989
-Job 1731406.wheeler-sn.alliance.unm.edu running on nodes:
-wheeler169 
+Job 1732860.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler146 
 
-prologue running on host: wheeler169
-Agent pid 2403
+prologue running on host: wheeler146
+Agent pid 6970
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-=>> PBS: job killed: walltime 27319 exceeded limit 27300
 Wheeler Portable Batch System Epilogue

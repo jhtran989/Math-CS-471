@@ -13,7 +13,7 @@ import sys
 from time import time
 
 global_maxiter = 400  # go through code and refactor
-global_tol = 1e-5  # 1e-15 1e-10
+global_tol = 1e-6  # 1e-15 1e-10
 
 # MPI Stuff
 comm = MPI.COMM_WORLD

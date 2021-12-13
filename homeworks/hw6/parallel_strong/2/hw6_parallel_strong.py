@@ -13,16 +13,21 @@ import sys
 from time import time
 
 global_maxiter = 400  # go through code and refactor
-global_tol = 1e-10  # 1e-15 -- takes way to long for the strong scaling...
+global_tol = 1e-6  # 1e-10 1e-15 -- takes way to long for the strong scaling...
 
 # Strong scaling -- repeat each 5 times and take the smallest of the 5 times
-ntimings = 1  # changed from 5...each timing is too long for some reason
+ntimings = 5  # changed from 5...each timing is too long for some reason
+# hopefully with tol = 1e-6, the timings shouldn't take too long...
 
 # MPI Stuff
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
 nprocs = comm.size
+
+# print tol
+if rank == 0:
+    sys.stderr.write(f"tol: {global_tol}\n")
 
 # Plots Stuff
 parallel_root = f"parallel/"
