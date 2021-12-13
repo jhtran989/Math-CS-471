@@ -10,7 +10,7 @@ import os
 
 
 global_maxiter = 400  # go through code and refactor
-global_tol = 1e-4  # 1e-10, 1e-15
+global_tol = 1e-5  # 1e-10, 1e-15
 
 print(f"tol: {global_tol}")
 
@@ -23,6 +23,9 @@ os.makedirs(serial_plots_dir, exist_ok=True)
 # DEBUG Stuff
 PLOT_TIME_STEP = False
 FINAL_DEBUG = False
+
+# print convergence check
+CONVERGENCE_CHECK = True
 
 '''
     # Problem Preliminary: MPI cheat sheet
@@ -141,9 +144,6 @@ def jacobi(A, b, x0, tol, maxiter):
     ------
     x <array>       : Solution to A x = b
     '''
-
-    # print convergence check
-    CONVERGENCE_CHECK = False
 
     # This useful function returns an array containing diag(A)
     D = A.diagonal()
