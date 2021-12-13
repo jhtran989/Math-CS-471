@@ -243,7 +243,7 @@ function run_multiple_parallel_strong_script() {
 	for (( i=0; i<${num_strong}; i++ ))
 	do
 		current_parallel_strong_dir=${parallel_strong_dir_array[$i]}
-		current_parallel_strong_python=${parallel_strong_python[$i]}
+		current_parallel_strong_python=${parallel_strong_python_array[$i]}
 		
 		# make directory for strong scaling
 		mkdir -p ${current_parallel_strong_dir}
@@ -299,38 +299,6 @@ function run_multiple_parallel_strong_script() {
 		
 		cd ${up2}
 	done
-}
-
-function run_script_matvec_2d {
-	module load mpich-3.2-gcc-4.8.5-7ebkszx
-	
-	if (( ${normal} == 1 )); then 
-		mpirun -n ${num_processes} ./example
-	fi 
-	
-	if (( ${tau_trace} == 1 )); then 
-		export TAU_TRACE=1
-	fi
-	
-	if (( ${tau_profile} == 1 )); then 
-		mpirun -n ${num_processes} tau_exec ./example
-	fi
-}
-
-function run_script_cannon {
-	module load mpich-3.2-gcc-4.8.5-7ebkszx
-	
-	if (( ${normal} == 1 )); then 
-		mpirun -n ${num_processes} ./example
-	fi 
-	
-	if (( ${tau_trace} == 1 )); then 
-		export TAU_TRACE=1
-	fi
-	
-	if (( ${tau_profile} == 1 )); then 
-		mpirun -n ${num_processes} tau_exec ./example
-	fi
 }
 
 # module load mpich-3.2-gcc-4.8.5-7ebkszx
