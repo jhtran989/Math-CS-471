@@ -177,19 +177,34 @@ function run_parallel_strong_script() {
 	num_processes_per_node=8
 	
 	# increase time a lot for final results...
+	# ah, just use the full 48 hours, just in case for 8, 4, and 2 processes
 	if (( $num_processes > 8 )); then
 		num_hours="02"
 		num_minutes="30"
 	elif (( $num_processes == 8 )); then
-		num_hours="03"
-		num_minutes="45"
+		num_hours="48"
+		num_minutes="00"
 	elif (( $num_processes == 4 )); then
-		num_hours="05"
-		num_minutes="45"
+		num_hours="48"
+		num_minutes="00"
 	else # assumed to be 2 processes...
-		num_hours="07"
-		num_minutes="35"
+		num_hours="48"
+		num_minutes="00"
 	fi
+	
+	# if (( $num_processes > 8 )); then
+# 		num_hours="02"
+# 		num_minutes="30"
+# 	elif (( $num_processes == 8 )); then
+# 		num_hours="03"
+# 		num_minutes="45"
+# 	elif (( $num_processes == 4 )); then
+# 		num_hours="05"
+# 		num_minutes="45"
+# 	else # assumed to be 2 processes...
+# 		num_hours="07"
+# 		num_minutes="35"
+# 	fi
 	
 	# if (( $num_processes > 8 )); then
 # 		num_hours="00"
