@@ -496,11 +496,11 @@ if __name__ == "__main__":
     # scale with Nt_values so each process should get ~2000 values each
     # actually, could determine the Nt and N values from number of processes...
     power = int(log(nprocs) / log(4))
-    # Nt_values = array([16 * (4 ** power)])  # 16 -- initial
-    # N_values = array([48 * (2 ** power)])  # 48 -- initial
+    Nt_values = array([16 * (4 ** power)])  # 16 -- initial
+    N_values = array([100 * (2 ** power)])  # 48 -- initial
     # test -- debug
-    Nt_values = array([12 * (4 ** power)])  # 16 -- initial
-    N_values = array([8 * (2 ** power)])  # 48 -- initial
+    # Nt_values = array([12 * (4 ** power)])  # 16 -- initial
+    # N_values = array([8 * (2 ** power)])  # 48 -- initial
     T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
 
     # Initial stuff (comm)
