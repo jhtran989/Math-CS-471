@@ -66,7 +66,7 @@ parallel_strong_script="hw6_parallel_strong.pbs"
 parallel_strong_python_array=()
 for parallel_strong_dir in ${parallel_strong_dir_array[@]}
 do
-	parallel_strong_python_array+=("${parallel_strong_dir%/.py}")
+	parallel_strong_python_array+=("${parallel_strong_dir%/}.py")
 done
 num_strong=${#parallel_strong_dir_array[@]}
 
