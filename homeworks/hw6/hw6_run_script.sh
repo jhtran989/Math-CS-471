@@ -416,7 +416,7 @@ function run_multiple_parallel_weak_script() {
 # ;; vs exit;; (one continues and the other exits)
 
 # OPTIONS
-while getopts ":hap:w:s:x:" args; do
+while getopts ":hap:w:s:x:y:" args; do
 	case $args in 
 	h)
 		echo "============================================================================================="
