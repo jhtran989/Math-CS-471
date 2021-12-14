@@ -1,0 +1,25 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1734800.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1734800.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler109 wheeler097 wheeler096 wheeler095 wheeler094 wheeler093 wheeler086 wheeler085 
+
+prologue running on host: wheeler109
+Agent pid 31552
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 4108
+Agent pid 8900
+Agent pid 15107
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 11058
+Agent pid 13099
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 28641
+Agent pid 17828
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+=>> PBS: job killed: walltime 1825 exceeded limit 1800
+Wheeler Portable Batch System Epilogue

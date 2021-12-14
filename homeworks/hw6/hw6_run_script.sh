@@ -96,6 +96,7 @@ function run_serial_error_script() {
 	
 	# escape '$' with '\' since there are some variables only seen in the .pbs script
 	sed -i "81 i python ${serial_error_python}" ${serial_error_script}
+	sed -i "82 i tracejob \$PBS_JOBID" ${serial_error_script}
 	
 	qsub ${serial_error_script}
 }
@@ -120,6 +121,7 @@ function run_parallel_error_script() {
 	
 	# escape '$' with '\' since there are some variables only seen in the .pbs script
 	sed -i "81 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_error_python}" ${parallel_error_script}
+	sed -i "82 i tracejob \$PBS_JOBID" ${parallel_error_script}
 	
 	qsub ${parallel_error_script}
 }
@@ -160,6 +162,7 @@ function run_parallel_weak_script() {
 	# escape '$' with '\' since there are some variables only seen in the .pbs script
 	sed -i "9 i #PBS -lnodes=${num_nodes}:ppn=${num_processes_per_node}" ${parallel_weak_script}
 	sed -i "82 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_weak_python}" ${parallel_weak_script}
+	sed -i "83 i tracejob \$PBS_JOBID" ${parallel_weak_script}
 	
 	qsub ${parallel_weak_script}
 }
@@ -246,6 +249,7 @@ function run_parallel_strong_script() {
 	sed -i "10 i #PBS -lnodes=${num_nodes}:ppn=${num_processes_per_node}" ${parallel_strong_script}
 	sed -i "16 i #PBS -l walltime=${num_hours}:${num_minutes}:00" ${parallel_strong_script}
 	sed -i "86 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${parallel_strong_python}" ${parallel_strong_script}
+	sed -i "87 i tracejob \$PBS_JOBID" ${parallel_strong_script}
 	
 	qsub ${parallel_strong_script}
 }
@@ -290,9 +294,10 @@ function run_multiple_parallel_strong_script() {
 	
 		# increase time a lot for final results...
 		# ah, just use the full 48 hours, just in case for 8, 4, and 2 processes
+		# as well as the last few cases
 		if (( $num_processes > 8 )); then
-			num_hours="04"
-			num_minutes="30"
+			num_hours="48"
+			num_minutes="00"
 		elif (( $num_processes == 8 )); then
 			num_hours="48"
 			num_minutes="00"
@@ -311,6 +316,7 @@ function run_multiple_parallel_strong_script() {
 		# maybe --map-by node:PE=8 is causing an issue...
 		# sed -i "86 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${current_parallel_strong_python}" ${parallel_strong_script}
 		sed -i "86 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} python ${current_parallel_strong_python}" ${parallel_strong_script}
+		sed -i "87 i tracejob \$PBS_JOBID" ${parallel_strong_script}
 		
 		qsub ${parallel_strong_script}
 		
