@@ -44,7 +44,7 @@ if rank == 0:  # reduce any clashes when multiples processes try to make the
 
 # DEBUG Stuff
 # print convergence check
-CONVERGENCE_CHECK = False
+CONVERGENCE_CHECK = True
 FIRST_TIME_STEP_CHECK = False
 LAST_TIME_STEP_CHECK = False
 LAST_JACOBI_ITERATION_CHECK = False

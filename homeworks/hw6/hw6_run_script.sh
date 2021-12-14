@@ -199,9 +199,10 @@ function run_parallel_strong_script() {
 	
 	# increase time a lot for final results...
 	# ah, just use the full 48 hours, just in case for 8, 4, and 2 processes
+	# actually, just do it for all cases (included 16, 32, 64 processes)
 	if (( $num_processes > 8 )); then
-		num_hours="02"
-		num_minutes="30"
+		num_hours="48"
+		num_minutes="00"
 	elif (( $num_processes == 8 )); then
 		num_hours="48"
 		num_minutes="00"
