@@ -58,23 +58,25 @@ parallel_strong_python="hw6_parallel_strong.py"
 
 # Record timings for strong scaling -- REMEMBER TO UPDATE BELOW
 # now run multiiple strong scaling studies at once with different tolerances to compare timings...
-parallel_strong_dir_array=("parallel_strong_256_1e-4/" "parallel_strong_256_1e-8/" "parallel_strong_512_1e-4/" 
-"parallel_strong_512_1e-8/")
-parallel_strong_script="hw6_parallel_strong.pbs"
 
-# parallel_strong_python_array=("hw6_parallel_strong_256_1e-4.py" "hw6_parallel_strong_256_1e-8.py" "hw6_parallel_strong_512_1e-4.py" "hw6_parallel_strong_512_1e-8.py")
-parallel_strong_python_array=()
-for parallel_strong_dir in ${parallel_strong_dir_array[@]}
-do
-	parallel_strong_python_array+=("hw6_${parallel_strong_dir%/}.py")
-done
-num_strong=${#parallel_strong_dir_array[@]}
+#TODO: uncomment
+# parallel_strong_dir_array=("parallel_strong_256_1e-4/" "parallel_strong_256_1e-8/" "parallel_strong_512_1e-4/"
+# "parallel_strong_512_1e-8/")
+# parallel_strong_script="hw6_parallel_strong.pbs"
+#
+# # parallel_strong_python_array=("hw6_parallel_strong_256_1e-4.py" "hw6_parallel_strong_256_1e-8.py" "hw6_parallel_strong_512_1e-4.py" "hw6_parallel_strong_512_1e-8.py")
+# parallel_strong_python_array=()
+# for parallel_strong_dir in ${parallel_strong_dir_array[@]}
+# do
+# 	parallel_strong_python_array+=("hw6_${parallel_strong_dir%/}.py")
+# done
+# num_strong=${#parallel_strong_dir_array[@]}
 
 # for Michael
-# num_strong=1
-# parallel_strong_dir_array=("parallel_strong_128_1e-4/")
-# parallel_strong_script="hw6_parallel_strong.pbs"
-# parallel_strong_python_array=("hw6_parallel_strong_128_1e-4.py")
+num_strong=1
+parallel_strong_dir_array=("parallel_strong_128_1e-4/")
+parallel_strong_script="hw6_parallel_strong.pbs"
+parallel_strong_python_array=("hw6_parallel_strong_128_1e-4.py")
 
 # changed from run_script_inner_prod
 function run_serial_error_script() {
