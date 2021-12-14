@@ -1,0 +1,23 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1734245.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1734245.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler106 wheeler096 wheeler095 wheeler071 
+
+prologue running on host: wheeler106
+Agent pid 14347
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 19864
+Agent pid 21743
+Agent pid 31748
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+tol: 0.0001
+number of processes: 32
+Nt values: [1024]
+N values: [256]
+T: 0.0625
+timing 0: 224.97073769569397
+Nt, N, Error is:  1024,  256,  1.0856977108897965e-07
+Wheeler Portable Batch System Epilogue
