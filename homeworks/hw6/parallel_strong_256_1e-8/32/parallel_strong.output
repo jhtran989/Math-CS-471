@@ -1,0 +1,51 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1734294.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1734294.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler156 wheeler146 wheeler142 wheeler141 
+
+prologue running on host: wheeler156
+Agent pid 27134
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 32542
+Agent pid 30227
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 15135
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+tol: 1e-08
+number of processes: 32
+Nt values: [1024]
+N values: [256]
+T: 0.0625
+b: [ 9.07095662e+00  5.03487768e+00  5.03299653e+00 ... -1.18213904e-03
+ -1.18258088e-03 -3.95949855e+00]
+x0: [ 0.99985058  0.99962647  0.99925298 ... -0.98027451 -0.9806409
+ -0.98086076]
+r0 vector: [-1.70484732e-07 -9.61413003e-08 -9.61053779e-08 ...  2.17252467e-08
+  2.17333685e-08  9.57105470e-08]
+r0 norm: 3.5035266203291765e-06
+n_local: 2048
+rk_vector: [ 0.00000000e+00  0.00000000e+00  0.00000000e+00 ... -1.55431223e-15
+ -3.33066907e-16  8.88178420e-16]
+rk norm: 3.510209048250173e-13
+Residual ratio: 1.0019073432701271e-07
+First time step
+did NOT converge
+b: [ 8.89666090e+00  4.93813400e+00  4.93628900e+00 ... -1.12275396e-03
+ -1.12317360e-03 -3.88338128e+00]
+x0: [ 0.98067615  0.98045633  0.98009001 ... -0.96147545 -0.96183483
+ -0.96205048]
+r0 vector: [-3.39495089e-04 -1.88438366e-04 -1.88367961e-04 ...  3.72676254e-05
+  3.72815549e-05  1.87594087e-04]
+r0 norm: 0.006357104367468638
+n_local: 2048
+rk_vector: [-3.55271368e-15 -7.10542736e-15 -9.76996262e-15 ...  5.72875081e-14
+  4.27435864e-14  1.68753900e-14]
+rk norm: 6.20263527613433e-11
+Residual ratio: 9.757013441332225e-09
+Last time step
+did converge, i = 297
+timing 0: 464.98371720314026
+Nt, N, Error is:  1024,  256,  2.563731359363811e-07
+Wheeler Portable Batch System Epilogue

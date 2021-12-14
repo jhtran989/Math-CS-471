@@ -1,0 +1,91 @@
+#!/bin/bash
+
+########################################################################
+# PBS directives, ie arguments to qsub. Learn more by running "man qsub"  
+########################################################################
+
+## This requests 1 node, and 8 cores, which is perfect our our thread-level programming
+####PBS -lnodes=1:ppn=8
+## Fill out the number of nodes/cores later in shell script...
+#PBS -lnodes=4:ppn=8
+
+
+## This is the max run-time allowed  hr:min:sec
+###PBS -l walltime=00:30:00 
+### Fill out the walltime later in the shell script...need more time for the 5 timings...
+#PBS -l walltime=04:30:00
+
+
+## The debug queue will likely be faster, but if your code takes more than 5 or
+## 10 minutes, switch "debug" to "default"
+#PBS -q default
+
+## This is the name of job itself shown with qstat
+#PBS -N hw6_parallel_strong
+
+## This line ensures the script runs in Bash
+#PBS -S /bin/bash
+
+## Send mail when the script aborts "a" and ends "e" to your email address
+### PBS -m ae
+### PBS -M jtran989@unm.edu
+
+## This is the filename for all printed output from your code
+#PBS -o parallel_strong.output
+
+## This line joins the output and error to print to the same file
+#PBS -j oe
+
+########################################################################
+########################################################################
+
+
+########################################################################
+# Load MPI and your custom Conda environment
+########################################################################
+#    To create your Conda environment for this class, you can do...
+#    $ module load miniconda<tab to complete version>  
+#    $ conda create --name wheeler_mpi_py3_2021 python=3 numpy mpi mpi4py scipy ipython matplotlib
+#      < press y to accept installation of all new packages and the many dependencies > 
+
+CONDA_ENV="wheeler_mpi_py3_2021"
+#HOMEWORK_FILENAME="hw6_parallel_error.py"
+
+#
+# ==> You will need to change "source activate ..." to use your anaconda module name
+# module load anaconda
+# source activate wheeler_mpi_py3_2021 
+
+# load both MPI and python onto Wheeler
+module load mpich-3.2-gcc-4.8.5-7ebkszx
+module load miniconda3-4.7.12.1-gcc-4.8.5-lmtvtik
+source activate ${CONDA_ENV}
+
+## sometimes the shell is not configured with conda (require restart), so source was used instead above
+# conda init bash
+# conda activate ${CONDA_ENV}
+########################################################################
+########################################################################
+
+
+########################################################################
+# Now, change directory into the batch system's preferred scratch directory
+# (don't worry about this now)
+########################################################################
+# Change to the directory where you submitted this script and typed qsub 
+cd $PBS_O_WORKDIR
+########################################################################
+########################################################################
+
+########################################################################
+# Now, run your program.
+########################################################################
+
+# ==> You will need to change the below filename to run your program
+# mpirun -machinefile $PBS_NODEFILE -np 1 --map-by node:PE=8 python ${HOMEWORK_FILENAME}
+mpirun -machinefile $PBS_NODEFILE -np 32 python hw6_parallel_strong_512_1e-8.py
+
+
+
+########################################################################
+########################################################################

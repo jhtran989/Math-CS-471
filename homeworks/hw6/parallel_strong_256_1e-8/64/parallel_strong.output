@@ -1,0 +1,59 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1734298.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1734298.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler115 wheeler114 wheeler110 wheeler106 wheeler104 wheeler103 wheeler096 wheeler095 
+
+prologue running on host: wheeler115
+Agent pid 18020
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 7644
+Agent pid 29678
+Agent pid 14759
+Agent pid 3881
+Agent pid 14510
+Agent pid 26238
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 18905
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+tol: 1e-08
+number of processes: 64
+Nt values: [1024]
+N values: [256]
+T: 0.0625
+b: [ 9.07095662e+00  5.03487768e+00  5.03299653e+00 ... -1.19935780e-03
+ -1.19980607e-03 -4.01717167e+00]
+x0: [ 0.99985058  0.99962647  0.99925298 ... -0.99455296 -0.99492468
+ -0.99514774]
+r0 vector: [-1.70484732e-07 -9.61413003e-08 -9.61053779e-08 ...  2.18034575e-08
+  2.18116090e-08  9.60550963e-08]
+r0 norm: 3.503526619601722e-06
+n_local: 1024
+rk_vector: [ 0.00000000e+00  1.77635684e-15  0.00000000e+00 ...  2.44249065e-15
+ -4.44089210e-16 -3.55271368e-15]
+rk norm: 3.533253949972125e-13
+Residual ratio: 1.0084849734561977e-07
+First time step
+did NOT converge
+b: [ 8.89666090e+00  4.93813400e+00  4.93628900e+00 ... -1.13910772e-03
+ -1.13953348e-03 -3.93994569e+00]
+x0: [ 0.98067615  0.98045633  0.98009001 ... -0.97548009 -0.9758447
+ -0.97606349]
+r0 vector: [-3.39495089e-04 -1.88438366e-04 -1.88367961e-04 ...  3.74017859e-05
+  3.74157654e-05  1.88269409e-04]
+r0 norm: 0.006357104367470284
+n_local: 1024
+rk_vector: [-3.55271368e-15 -2.66453526e-15 -1.24344979e-14 ...  2.96429548e-14
+  2.39808173e-14  8.88178420e-15]
+rk norm: 6.202699719699643e-11
+Residual ratio: 9.757114813843959e-09
+Last time step
+did converge, i = 297
+timing 0: 388.5941684246063
+Nt, N, Error is:  1024,  256,  2.563731359443001e-07
+Wheeler Portable Batch System Epilogue

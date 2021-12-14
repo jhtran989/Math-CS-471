@@ -1,14 +1,11 @@
 Wheeler Portable Batch System Prologue
-Job Id: 1733059.wheeler-sn.alliance.unm.edu
+Job Id: 1734798.wheeler-sn.alliance.unm.edu
 Username: jtran989
-Job 1733059.wheeler-sn.alliance.unm.edu running on nodes:
-wheeler032 
+Job 1734798.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler185 
 
-prologue running on host: wheeler032
-Agent pid 21476
+prologue running on host: wheeler185
+Agent pid 16590
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-number of processes: 4
-tol: 1e-10
-timing: 1.6466238498687744
-Nt, N, Error is:  48,  16,  6.7080332067002e-05
+=>> PBS: job killed: walltime 1813 exceeded limit 1800
 Wheeler Portable Batch System Epilogue
