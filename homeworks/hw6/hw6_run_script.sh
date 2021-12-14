@@ -50,6 +50,20 @@ parallel_weak_dir="parallel_weak/"
 parallel_weak_script="hw6_parallel_weak.pbs"
 parallel_weak_python="hw6_parallel_weak.py"
 
+# Record timings for weak scaling -- REMEMBER TO UPDATE BELOW
+# now run multiiple weak scaling studies at once with different tolerances to compare timings...
+
+parallel_weak_dir_array=("parallel_weak_100_1e-4/")
+parallel_weak_script="hw6_parallel_weak.pbs"
+
+# parallel_strong_python_array=("hw6_parallel_strong_256_1e-4.py" "hw6_parallel_strong_256_1e-8.py" "hw6_parallel_strong_512_1e-4.py" "hw6_parallel_strong_512_1e-8.py")
+parallel_weak_python_array=()
+for parallel_weak_dir in ${parallel_weak_dir_array[@]}
+do
+	parallel_weak_python_array+=("hw6_${parallel_weak_dir%/}.py")
+done
+num_weak=${#parallel_weak_dir_array[@]}
+
 # Record timings for strong scaling -- REMEMBER TO UPDATE BELOW
 # now run multiiple strong scaling studies at once with different tolerances to compare timings...
 parallel_strong_dir="parallel_strong/"
@@ -326,6 +340,76 @@ function run_multiple_parallel_strong_script() {
 	done
 }
 
+function run_multiple_parallel_weak_script() {
+	#move module load to the job script as well
+	#module load mpich-3.2-gcc-4.8.5-7ebkszx
+	
+	for (( i=0; i<${num_weak}; i++ ))
+	do
+		current_parallel_weak_dir=${parallel_weak_dir_array[$i]}
+		current_parallel_weak_python=${parallel_weak_python_array[$i]}
+		
+		# make directory for weak scaling
+		mkdir -p ${current_parallel_weak_dir}
+		cd ${current_parallel_weak_dir}
+	
+		# clean out directory to remove any artifacts from past debug/run session
+		[[ -d ${num_processes} ]] && rm -r ${num_processes}
+	
+		# want to keep a copy of the output file by the PBS system for each run, so need separate directories (on different number of processes)
+		mkdir -p ${num_processes}
+		cd ${num_processes}
+	
+		# copy pbs script to current dir
+		cp ${up2}${parallel_weak_script} ${parallel_weak_script}
+	
+		# copy python script to current dir
+		cp ${up2}${current_parallel_weak_python} ${current_parallel_weak_python}
+		cp ${up2}${poisson_python} ${poisson_python}
+	
+		# calculate the corresponding number of nodes and processes
+		num_nodes=$(( num_processes / 8 ))
+		remainder=$(( num_processes % 8 ))
+
+		# just round up if there are still some processes left over
+		if (( ${remainder} != 0 )); then
+			num_nodes=$(( num_nodes + 1 ))
+		fi
+
+		num_processes_per_node=8
+	
+		# increase time a lot for final results...
+		# ah, just use the full 48 hours, just in case for 8, 4, and 2 processes
+		# as well as the last few cases
+		if (( $num_processes > 8 )); then
+			num_hours="48"
+			num_minutes="00"
+		elif (( $num_processes == 8 )); then
+			num_hours="48"
+			num_minutes="00"
+		elif (( $num_processes == 4 )); then
+			num_hours="48"
+			num_minutes="00"
+		else # assumed to be 2 processes...
+			num_hours="48"
+			num_minutes="00"
+		fi
+	
+		# escape '$' with '\' since there are some variables only seen in the .pbs script
+		sed -i "10 i #PBS -lnodes=${num_nodes}:ppn=${num_processes_per_node}" ${parallel_weak_script}
+		sed -i "16 i #PBS -l walltime=${num_hours}:${num_minutes}:00" ${parallel_weak_script}
+		
+		# maybe --map-by node:PE=8 is causing an issue...
+		# sed -i "86 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} --map-by node:PE=8 python ${current_parallel_weak_python}" ${parallel_weak_script}
+		sed -i "86 i mpirun -machinefile \$PBS_NODEFILE -np ${num_processes} python ${current_parallel_weak_python}" ${parallel_weak_script}
+		sed -i "87 i tracejob \$PBS_JOBID" ${parallel_weak_script}
+		
+		qsub ${parallel_weak_script}
+		
+		cd ${up2}
+	done
+}
+
 # module load mpich-3.2-gcc-4.8.5-7ebkszx
 # mpirun -n ${num_processes} ./example
 
@@ -380,6 +464,14 @@ while getopts ":hap:w:s:x:" args; do
 		echo "number of processes: ${num_processes}"
 		echo "============================================================================================="
 		run_multiple_parallel_strong_script
+		exit;;
+	y)
+		num_processes=${OPTARG}
+		echo "============================================================================================="
+		echo "Executing parallel algorithm to make the timings file for WEAK scaling for MULTIPLE cases"
+		echo "number of processes: ${num_processes}"
+		echo "============================================================================================="
+		run_multiple_parallel_weak_script
 		exit;;
 	\?)
 		echo "============================================================================================="
