@@ -12,7 +12,7 @@ import sys
 
 from time import time
 
-global_maxiter = 400  # go through code and refactor
+global_maxiter = 400  # 250 go through code and refactor
 global_tol = 1e-8  # 1e-10 1e-15 -- takes way to long for the strong scaling...
 
 # Strong scaling -- repeat each 5 times and take the smallest of the 5 times
@@ -45,6 +45,11 @@ if rank == 0:  # reduce any clashes when multiples processes try to make the
 # DEBUG Stuff
 # print convergence check
 CONVERGENCE_CHECK = False
+FIRST_TIME_STEP_CHECK = False
+LAST_TIME_STEP_CHECK = False
+LAST_JACOBI_ITERATION_CHECK = False
+CONVERGENCE_DEBUG = False
+NORM_DEBUG = False
 MATVEC_CHECK = False
 JACOBI_DEBUG = False
 INITIALIZATION_DEBUG = False
@@ -201,8 +206,32 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
     #
     # r0 = sqrt(r0_global[0])  # this is the init residual
 
+    # IMPORTANT: need to communicate x initially since x0 still has the
+    # "incorrect values" from the finish of the last time iteration...
+
+    neighbor_communication(x0, n_local, comm)
+
     r0_vector = b - A * x0
+
+    # in order to calculate the norm correctly, only use the LOCAL
+    # PORTION of the residual -- INCLUDING r0
+    if nprocs > 1:
+        if rank == 0:
+            r0_vector = r0_vector[:n_local]
+        elif rank == (nprocs - 1):
+            r0_vector = r0_vector[-n_local:]
+        else:
+            r0_vector = r0_vector[n_local:-n_local]
+
     r0_norm = norm(r0_vector, comm)
+
+    if rank == 0:
+        if CONVERGENCE_CHECK:
+            if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                sys.stderr.write(f"b: {b}\n")
+                sys.stderr.write(f"x0: {x0}\n")
+                sys.stderr.write(f"r0 vector: {r0_vector}\n")
+                sys.stderr.write(f"r0 norm: {r0_norm}\n")
 
     # print(f"r0: {r0}")
 
@@ -236,10 +265,25 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
         #
         # rk = sqrt(rk_global[0])  # this is the init residual
 
-        if CONVERGENCE_CHECK:
+        # IMPORTANT: need to communicate x AFTER THE UPDATE for x[i + 1] --
+        # only updated LOCAL PORTION, not neighboring values of x...
+        neighbor_communication(x[i + 1], n_local, comm)
+
+        if CONVERGENCE_DEBUG:
             print(f"Jacobi iteration: {i}")
 
         rk_vector = b - A * x[i + 1]
+
+        # in order to calculate the norm correctly, only use the LOCAL
+        # PORTION of the residual
+        if nprocs > 1:
+            if rank == 0:
+                rk_vector = rk_vector[:n_local]
+            elif rank == (nprocs - 1):
+                rk_vector = rk_vector[-n_local:]
+            else:
+                rk_vector = rk_vector[n_local:-n_local]
+
         rk_norm = norm(rk_vector, comm)
 
         # print(f"after ravel:")
@@ -252,15 +296,51 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
         # print(f"r0: {r0}")
         # print(f"rk: {rk}")
         if rk_norm / r0_norm <= tol:
-            if CONVERGENCE_CHECK:
-                print("did converge, i = ", i)
+            if rank == 0:
+                if CONVERGENCE_CHECK:
+                    if FIRST_TIME_STEP_CHECK:
+                        #sys.stderr.write(f"b: {b}\n")
+                        sys.stderr.write(f"n_local: {n_local}\n")
+                        sys.stderr.write(f"rk_vector: {rk_vector}\n")
+                        sys.stderr.write(f"rk norm: {rk_norm}\n")
+                        sys.stderr.write(f"Residual ratio: "
+                                         f"{rk_norm / r0_norm}\n")
+                        sys.stderr.write(f"First time step\n")
+                        sys.stderr.write(f"did converge, i = {i}\n")
+                    elif LAST_TIME_STEP_CHECK:
+                        #sys.stderr.write(f"b: {b}\n")
+                        sys.stderr.write(f"n_local: {n_local}\n")
+                        sys.stderr.write(f"rk_vector: {rk_vector}\n")
+                        sys.stderr.write(f"rk norm: {rk_norm}\n")
+                        sys.stderr.write(f"Residual ratio: "
+                                         f"{rk_norm / r0_norm}\n")
+                        sys.stderr.write(f"Last time step\n")
+                        sys.stderr.write(f"did converge, i = {i}\n")
 
             break
 
     # Task: Print if Jacobi did not converge. In parallel, only rank 0 should print.
     if rk_norm / r0_norm > tol:
-        if CONVERGENCE_CHECK:
-            print("did not converge")
+        if rank == 0:
+            if CONVERGENCE_CHECK:
+                if FIRST_TIME_STEP_CHECK:
+                    #sys.stderr.write(f"b: {b}\n")
+                    sys.stderr.write(f"n_local: {n_local}\n")
+                    sys.stderr.write(f"rk_vector: {rk_vector}\n")
+                    sys.stderr.write(f"rk norm: {rk_norm}\n")
+                    sys.stderr.write(f"Residual ratio: "
+                                     f"{rk_norm / r0_norm}\n")
+                    sys.stderr.write(f"First time step\n")
+                    sys.stderr.write(f"did NOT converge\n")
+                elif LAST_TIME_STEP_CHECK:
+                    #sys.stderr.write(f"b: {b}\n")
+                    sys.stderr.write(f"n_local: {n_local}\n")
+                    sys.stderr.write(f"rk_vector: {rk_vector}\n")
+                    sys.stderr.write(f"rk norm: {rk_norm}\n")
+                    sys.stderr.write(f"Residual ratio: "
+                                     f"{rk_norm / r0_norm}\n")
+                    sys.stderr.write(f"Last time step\n")
+                    sys.stderr.write(f"did NOT converge\n")
 
     # print("x", x.shape)
     # return x[last_i + 1:last_i + 2]
@@ -399,8 +479,9 @@ def norm(r_vector, comm):
     r_global_norm_scalar = sqrt(r_global_norm[0])
 
     if rank == 0:
-        if CONVERGENCE_CHECK:
-            print(f"global norm: {r_global_norm_scalar}")
+        if NORM_DEBUG:
+            if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                sys.stderr.write(f"global norm: {r_global_norm_scalar}\n")
 
     return r_global_norm_scalar
 
@@ -526,6 +607,10 @@ if __name__ == "__main__":
     Nt_values = array([1024])  # 1024
     N_values = array([512])  # 512
     T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
+
+    # Nt_values = array([12 * (4 ** 3)])  # 8*4 -> 100
+    # N_values = array([8 * (2 ** 3)])  # 16
+    # T = 0.75  # 0.5
 
     # IMPORTANT: reduced the time quite a bit -- problem seems to be
     # calculating uexact for the ENTIRE grid on process 0 at EACH TIME STEP
@@ -799,44 +884,46 @@ if __name__ == "__main__":
             # same indexing with global and local ONLY on rank 0
             if rank == 0:
                 u_global = zeros((nt, n ** 2))
-                u_global[0][start_domain_index:end_domain_index] = u0_local[
-                                                                   start_domain_index:end_domain_index]
+                u_global[0][start_domain_index:end_domain_index] = \
+                    u0_local[start_domain_index:end_domain_index]
 
                 ue_global = zeros((nt, n ** 2))
-                ue_global[0][start_domain_index:end_domain_index] = u0_local[
-                                                                    start_domain_index:end_domain_index]
+                ue_global[0][start_domain_index:end_domain_index] = \
+                    u0_local[start_domain_index:end_domain_index]
 
             # communication only with more than 1 processes...
-            if nprocs > 1:
-                if rank != 0:
-                    if rank == (nprocs - 1):
-                        comm.Send([u0_local[-n_local_domain:], MPI.DOUBLE], dest=0,
-                                  tag=77)
-                    else:
-                        comm.Send(
-                            [u0_local[n_local_domain:-n_local_domain], MPI.DOUBLE],
-                            dest=0,
-                            tag=77)
+            # if nprocs > 1:
+            #     if rank != 0:
+            #         if rank == (nprocs - 1):
+            #             comm.Send([u0_local[-n_local_domain:], MPI.DOUBLE],
+            #                       dest=0,
+            #                       tag=77)
+            #         else:
+            #             comm.Send(
+            #                 [u0_local[n_local_domain:-n_local_domain], MPI.DOUBLE],
+            #                 dest=0,
+            #                 tag=77)
+            #
+            #     if rank == 0:
+            #         for rank_num in range(1, nprocs):
+            #             start_index_inner = rank_num * n_local_domain
+            #             end_index_inner = (rank_num + 1) * n_local_domain
+            #
+            #             comm.Recv([u_global[0]
+            #                        [start_index_inner:end_index_inner], MPI.DOUBLE],
+            #                       source=rank_num, tag=77)
 
+            if PLOT_TIME_STEP:
                 if rank == 0:
-                    for rank_num in range(1, nprocs):
-                        start_index_inner = rank_num * n_local_domain
-                        end_index_inner = (rank_num + 1) * n_local_domain
-
-                        comm.Recv([u_global[0]
-                                   [start_index_inner:end_index_inner], MPI.DOUBLE],
-                                  source=rank_num, tag=77)
-
-            if rank == 0:
-                pyplot.figure(0)
-                pyplot.imshow(u_global[0, :].reshape(n, n), origin='lower',
-                              extent=(0, 1, 0, 1))
-                pyplot.colorbar()
-                pyplot.xlabel('X')
-                pyplot.ylabel('Y')
-                pyplot.title(f"Solution, i={0}")
-                pyplot.savefig(f"{parallel_plots_dir_current}solution_{0}.png")
-                pyplot.close(pyplot.figure(0))
+                    pyplot.figure(0)
+                    pyplot.imshow(u_global[0, :].reshape(n, n), origin='lower',
+                                  extent=(0, 1, 0, 1))
+                    pyplot.colorbar()
+                    pyplot.xlabel('X')
+                    pyplot.ylabel('Y')
+                    pyplot.title(f"Solution, i={0}")
+                    pyplot.savefig(f"{parallel_plots_dir_current}solution_{0}.png")
+                    pyplot.close(pyplot.figure(0))
 
             # Testing harness for parallel part: Only comment-in and run for the smallest
             # problem size of 8 time points and an 8x8 grid
@@ -858,6 +945,17 @@ if __name__ == "__main__":
 
             # Run time-stepping over "nt" time points
             for i in range(1, nt):
+                # set TIME_CHECK above to print the number of iterations of
+                # Jacobi for checking
+                if i == 1:
+                    FIRST_TIME_STEP_CHECK = True
+                elif i == (nt - 1):
+                    LAST_TIME_STEP_CHECK = True
+                else:
+                    # only need to reset FIRST_TIME_STEP_CHECK
+                    if FIRST_TIME_STEP_CHECK:
+                        FIRST_TIME_STEP_CHECK = False
+
                 t = t0 + i * ht
                 # ERROR - DON'T use t0 (only initial iteration)
 
@@ -942,7 +1040,7 @@ if __name__ == "__main__":
                 # euler_backward only returns the LOCAL portion (NOT including
                 # halo regions)
                 u_local[i][start_index:end_index] = \
-                    euler_backward(A, u_local[i - 1, :], ht, f_be,
+                    euler_backward(A, u_local[i - 1][:], ht, f_be,
                                    (1 / h ** 2) * g, n_local_domain)
 
                 # want f at
@@ -1156,7 +1254,7 @@ if __name__ == "__main__":
                 # sys.stderr.write(f"rank: {rank}\n")
                 # sys.stderr.write(f"error local: {error_local}\n")
 
-                e = norm(error_local, comm)
+                enorm = norm(error_local, comm)
 
             if rank == 0:
                 if FINAL_DEBUG:
@@ -1170,7 +1268,8 @@ if __name__ == "__main__":
                     print(f"ue_global: {ue_global}")
 
                 if ERROR_NORM:
-                    enorm = linalg.norm(e) * h
+                    #enorm = linalg.norm(e) * h
+                    enorm = enorm * h
 
                     sys.stderr.write(
                         "Nt, N, Error is:  " + str(nt) + ",  " + str(n)
