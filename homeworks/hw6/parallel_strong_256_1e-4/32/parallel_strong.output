@@ -1,0 +1,51 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1734269.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1734269.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler178 wheeler174 wheeler160 wheeler158 
+
+prologue running on host: wheeler178
+Agent pid 15356
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 5287
+Agent pid 30690
+Agent pid 18075
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+tol: 0.0001
+number of processes: 32
+Nt values: [1024]
+N values: [256]
+T: 0.0625
+b: [ 9.07095662e+00  5.03487768e+00  5.03299653e+00 ... -1.18213904e-03
+ -1.18258088e-03 -3.95949855e+00]
+x0: [ 0.99985058  0.99962647  0.99925298 ... -0.98027451 -0.9806409
+ -0.98086076]
+r0 vector: [-1.70484732e-07 -9.61413003e-08 -9.61053779e-08 ...  2.17252467e-08
+  2.17333685e-08  9.57105470e-08]
+r0 norm: 3.5035266203291765e-06
+n_local: 2048
+rk_vector: [-3.37507799e-14 -5.41788836e-14 -9.14823772e-14 ...  5.91748872e-13
+  3.95794508e-13  2.00728323e-13]
+rk norm: 3.4576042516047494e-10
+Residual ratio: 9.868925303841097e-05
+First time step
+did converge, i = 146
+b: [ 8.89666090e+00  4.93813400e+00  4.93628901e+00 ... -1.12275396e-03
+ -1.12317360e-03 -3.88338128e+00]
+x0: [ 0.98067615  0.98045634  0.98009002 ... -0.96147551 -0.96183487
+ -0.9620505 ]
+r0 vector: [-3.39495146e-04 -1.88438478e-04 -1.88368127e-04 ...  3.72687623e-05
+  3.72823222e-05  1.87594474e-04]
+r0 norm: 0.006357519675073095
+n_local: 2048
+rk_vector: [-5.42286216e-11 -1.07560183e-10 -1.59444014e-10 ...  1.09702469e-09
+  7.40955186e-10  3.73099773e-10]
+rk norm: 6.313346723518775e-07
+Residual ratio: 9.930518576721805e-05
+Last time step
+did converge, i = 145
+timing 0: 234.34721422195435
+Nt, N, Error is:  1024,  256,  1.0856977108897965e-07
+Wheeler Portable Batch System Epilogue
