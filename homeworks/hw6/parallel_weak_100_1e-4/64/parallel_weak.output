@@ -1,0 +1,51 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1735515.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1735515.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler215 wheeler117 wheeler116 wheeler114 wheeler113 wheeler106 wheeler104 wheeler103 
+
+prologue running on host: wheeler215
+Agent pid 9949
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 23130
+Agent pid 16321
+Agent pid 9052
+Agent pid 24769
+Agent pid 6325
+Agent pid 20508
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 16580
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+tol: 0.0001
+new communication (chunks with multiple messages): True
+chunk size: 400
+number of processes: 64
+Nt values: [1024]
+N values: [800]
+T: 0.0064
+n_local: 9600
+r0 norm: 79.5972843983092
+n_local: 9600
+rk norm: 0.007837851210336349
+Residual ratio: 9.846882678955867e-05
+First time step
+did converge, i = 93
+n_local: 9600
+r0 norm: 0.033060103773666354
+n_local: 9600
+rk norm: 3.1650265298228215e-06
+Residual ratio: 9.57355291892304e-05
+Last time step
+did converge, i = 152
+timing 0: 2406.9470040798187
+Nt, N, Error is:  1024,  800,  0.14043183209755356
+/var/lib/torque/server_priv/accounting/20211214: No such file or directory
+/var/lib/torque/server_logs/20211214: No such file or directory
+/var/lib/torque/mom_logs/20211214: No matching job records located
+/var/lib/torque/sched_logs/20211214: No such file or directory
+Wheeler Portable Batch System Epilogue

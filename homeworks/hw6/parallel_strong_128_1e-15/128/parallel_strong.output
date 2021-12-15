@@ -1,0 +1,67 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1735579.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1735579.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler215 wheeler197 wheeler189 wheeler188 wheeler156 wheeler150 wheeler117 wheeler116 wheeler114 wheeler113 wheeler106 wheeler104 wheeler103 wheeler076 wheeler073 wheeler046 
+
+prologue running on host: wheeler215
+Agent pid 19966
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 24943
+Agent pid 5380
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 22828
+Agent pid 19399
+Agent pid 23088
+Agent pid 12838
+Agent pid 31278
+Agent pid 21772
+Agent pid 27115
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 19528
+Agent pid 14857
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 2234
+Agent pid 19008
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 4164
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 29634
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+tol: 1e-15
+new communication (chunks with multiple messages): True
+chunk size: 400
+number of processes: 128
+Nt values: [1024]
+N values: [128]
+T: 0.25
+n_local: 128
+r0 norm: 3.304095432443132e-05
+n_local: 128
+rk norm: 1.7228694838956222e-13
+Residual ratio: 5.2143454059427365e-09
+First time step
+did NOT converge
+n_local: 128
+r0 norm: 0.05555210579788931
+n_local: 128
+rk norm: 7.29656685620565e-13
+Residual ratio: 1.313463594476896e-11
+Last time step
+did NOT converge
+timing 0: 308.8910074234009
+Nt, N, Error is:  1024,  128,  7.944603805732343e-07
+/var/lib/torque/server_priv/accounting/20211214: No such file or directory
+/var/lib/torque/server_logs/20211214: No such file or directory
+/var/lib/torque/mom_logs/20211214: No matching job records located
+/var/lib/torque/sched_logs/20211214: No such file or directory
+Wheeler Portable Batch System Epilogue
