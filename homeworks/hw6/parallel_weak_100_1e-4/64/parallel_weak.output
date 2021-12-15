@@ -1,0 +1,24 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1735160.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1735160.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler085 wheeler084 wheeler083 wheeler074 wheeler073 wheeler072 wheeler071 wheeler070 
+
+prologue running on host: wheeler085
+Agent pid 2528
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 14984
+Agent pid 14393
+Agent pid 2866
+Agent pid 20791
+Agent pid 19227
+Agent pid 4521
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 21057
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Wheeler Portable Batch System Epilogue
