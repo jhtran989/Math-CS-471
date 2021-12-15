@@ -12,12 +12,10 @@ import sys
 
 from time import time
 
-global_maxiter = 400  # 250 go through code and refactor
-global_tol = 1e-4  # 1e-10 1e-15 -- takes way to long for the strong scaling...
+#TODO: Should of put command line arguments...
 
-Nt_values = array([1024])  # 1024
-N_values = array([256])  # 512
-T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
+global_maxiter = 400  # 250 go through code and refactor
+global_tol = 1e-10  # 1e-10 1e-15 -- takes way to long for the strong scaling...
 
 # Strong scaling -- repeat each 5 times and take the smallest of the 5 times
 ntimings = 1  # changed from 5...each timing is too long for some reason
@@ -29,6 +27,19 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
 nprocs = comm.size
+
+# Weak scaling study where the ratio ht/h**2 stays around 4 for all four
+# cases (maybe command line arguments?)
+# so, the number of processes should be 1, 4, 16, 64
+# scale with Nt_values so each process should get ~2000 values each
+# actually, could determine the Nt and N values from number of processes...
+power = int(log(nprocs) / log(4))
+Nt_values = array([16 * (4 ** power)])  # 16 -- initial
+N_values = array([100 * (2 ** power)])  # 48 -- initial
+# test -- debug
+# Nt_values = array([12 * (4 ** power)])  # 16 -- initial
+# N_values = array([8 * (2 ** power)])  # 48 -- initial
+T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/36
 
 # print tol
 if rank == 0:

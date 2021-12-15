@@ -15,6 +15,10 @@ from time import time
 global_maxiter = 400  # 250 go through code and refactor
 global_tol = 1e-4  # 1e-10 1e-15 -- takes way to long for the strong scaling...
 
+Nt_values = array([1024])  # 1024
+N_values = array([512])  # 512
+T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
+
 # Strong scaling -- repeat each 5 times and take the smallest of the 5 times
 ntimings = 1  # changed from 5...each timing is too long for some reason
 # hopefully with tol = 1e-6, the timings shouldn't take too long...
@@ -41,6 +45,21 @@ if rank == 0:  # reduce any clashes when multiples processes try to make the
 
 # move to main below
 # os.makedirs(parallel_plots_dir, exist_ok=True)
+
+# the new communication is basically chunking up the message size and
+# splitting it into multiple messages
+chunk_size = 400  # the number of values to send to other processes at a time
+NEW_COMMUNICATION = True
+NEW_COMMUNICATION_DEBUG = False
+COMMUNICATION_DEBUG = False
+
+if rank == 0:
+    sys.stderr.write(f"new communication (chunks with multiple messages):"
+                     f" {NEW_COMMUNICATION}\n")
+
+    if NEW_COMMUNICATION:
+        sys.stderr.write(f"chunk size: {chunk_size}\n")
+
 
 # DEBUG Stuff
 # print convergence check
@@ -192,6 +211,13 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
         sys.stderr.write(f"rank: {rank}\n")
         sys.stderr.write(f"n_local: {n_local}\n")
 
+    if CONVERGENCE_CHECK:
+        if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+            # sys.stderr.write(f"rank: {rank}\n")
+            # sys.stderr.write(f"x shape: {x0.shape}\n")
+            if rank == 0:
+                sys.stderr.write(f"n_local: {n_local}\n")
+
     # This useful function returns an array containing diag(A)
     D = A.diagonal()
     # print(f"Diagonal: {D}")
@@ -209,7 +235,10 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
     # IMPORTANT: need to communicate x initially since x0 still has the
     # "incorrect values" from the finish of the last time iteration...
 
-    neighbor_communication(x0, n_local, comm)
+    if NEW_COMMUNICATION:
+        new_neighbor_communication(x0, n_local, comm)
+    else:
+        neighbor_communication(x0, n_local, comm)
 
     r0_vector = b - A * x0
 
@@ -228,9 +257,9 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
     if rank == 0:
         if CONVERGENCE_CHECK:
             if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
-                sys.stderr.write(f"b: {b}\n")
-                sys.stderr.write(f"x0: {x0}\n")
-                sys.stderr.write(f"r0 vector: {r0_vector}\n")
+                #sys.stderr.write(f"b: {b}\n")
+                #sys.stderr.write(f"x0: {x0}\n")
+                #sys.stderr.write(f"r0 vector: {r0_vector}\n")
                 sys.stderr.write(f"r0 norm: {r0_norm}\n")
 
     # print(f"r0: {r0}")
@@ -267,7 +296,10 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
 
         # IMPORTANT: need to communicate x AFTER THE UPDATE for x[i + 1] --
         # only updated LOCAL PORTION, not neighboring values of x...
-        neighbor_communication(x[i + 1], n_local, comm)
+        if NEW_COMMUNICATION:
+            new_neighbor_communication(x[i + 1], n_local, comm)
+        else:
+            neighbor_communication(x[i + 1], n_local, comm)
 
         if CONVERGENCE_DEBUG:
             print(f"Jacobi iteration: {i}")
@@ -301,7 +333,7 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
                     if FIRST_TIME_STEP_CHECK:
                         #sys.stderr.write(f"b: {b}\n")
                         sys.stderr.write(f"n_local: {n_local}\n")
-                        sys.stderr.write(f"rk_vector: {rk_vector}\n")
+                        #sys.stderr.write(f"rk_vector: {rk_vector}\n")
                         sys.stderr.write(f"rk norm: {rk_norm}\n")
                         sys.stderr.write(f"Residual ratio: "
                                          f"{rk_norm / r0_norm}\n")
@@ -310,7 +342,7 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
                     elif LAST_TIME_STEP_CHECK:
                         #sys.stderr.write(f"b: {b}\n")
                         sys.stderr.write(f"n_local: {n_local}\n")
-                        sys.stderr.write(f"rk_vector: {rk_vector}\n")
+                        #sys.stderr.write(f"rk_vector: {rk_vector}\n")
                         sys.stderr.write(f"rk norm: {rk_norm}\n")
                         sys.stderr.write(f"Residual ratio: "
                                          f"{rk_norm / r0_norm}\n")
@@ -326,7 +358,7 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
                 if FIRST_TIME_STEP_CHECK:
                     #sys.stderr.write(f"b: {b}\n")
                     sys.stderr.write(f"n_local: {n_local}\n")
-                    sys.stderr.write(f"rk_vector: {rk_vector}\n")
+                    #sys.stderr.write(f"rk_vector: {rk_vector}\n")
                     sys.stderr.write(f"rk norm: {rk_norm}\n")
                     sys.stderr.write(f"Residual ratio: "
                                      f"{rk_norm / r0_norm}\n")
@@ -335,7 +367,7 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
                 elif LAST_TIME_STEP_CHECK:
                     #sys.stderr.write(f"b: {b}\n")
                     sys.stderr.write(f"n_local: {n_local}\n")
-                    sys.stderr.write(f"rk_vector: {rk_vector}\n")
+                    #sys.stderr.write(f"rk_vector: {rk_vector}\n")
                     sys.stderr.write(f"rk norm: {rk_norm}\n")
                     sys.stderr.write(f"Residual ratio: "
                                      f"{rk_norm / r0_norm}\n")
@@ -354,8 +386,211 @@ def jacobi(A, b, x0, tol, maxiter, n_local, comm):
         return x[last_i][n_local:-n_local]
 
 
+def new_neighbor_communication(x, n_local, comm):
+    # communication only with more than 1 processes...
+    # auto typing with MPI -- remove MPI.DOUBLE...
+    if nprocs > 1:
+        n_local = int(n_local)
+
+        if JACOBI_DEBUG:
+            if rank == 0:
+                sys.stderr.write(f"during neighbor communication...\n")
+
+            sys.stderr.write(f"rank: {rank}\n")
+            sys.stderr.write(f"x: {x}\n")
+            sys.stderr.write(f"x shape: {x.shape}\n")
+
+        if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+            if COMMUNICATION_DEBUG:
+                sys.stderr.write(f"rank: {rank}\n")
+                sys.stderr.write(f"size of x: {x.shape}\n")
+                sys.stderr.write(f"n_local: {n_local}\n")
+
+        num_phases = (n_local // chunk_size)
+        chunk_remainder = (n_local % chunk_size)  # SKIP: PLUS 1 for end point
+
+        if chunk_remainder != 0:
+            num_phases += 1
+
+        if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+            if rank == 0:
+                if NEW_COMMUNICATION_DEBUG:
+                    sys.stderr.write(f"chunk size: {chunk_size}\n")
+                    sys.stderr.write(f"num phases: {num_phases}\n")
+                    sys.stderr.write(f"chunk remainder: {chunk_remainder}\n")
+
+        for i in range(num_phases):
+            if chunk_remainder != 0:
+                if i != (num_phases - 1):
+                    start_correction = int(i * chunk_size)
+                    end_correction = int((i + 1) * chunk_size)
+                else:  # last phase
+                    start_correction = int(i * chunk_size)
+                    end_correction = n_local  #
+                    # basically, n_local
+            else:
+                start_correction = int(i * chunk_size)
+                end_correction = int((i + 1) * chunk_size)
+
+            x_start_bottom = (1 * n_local) + start_correction
+            x_end_bottom = (1 * n_local) + end_correction
+            #x_end_bottom = (2 * n_local) + end_correction
+
+            x_start_top = (-2 * n_local) + start_correction
+            x_end_top = (-2 * n_local) + end_correction
+            #x_end_top = (-1 * n_local) + end_correction
+
+            if NEW_COMMUNICATION_DEBUG:
+                if rank == 0:
+                    sys.stderr.write(f"phase index i: {i}\n")
+                    sys.stderr.write(f"start correction: {start_correction}\n")
+                    sys.stderr.write(f"end correction: {end_correction}\n")
+                    sys.stderr.write(f"x start bottom: {x_start_bottom}\n")
+                    sys.stderr.write(f"x start bottom: {x_end_bottom}\n")
+                    sys.stderr.write(f"x start bottom: {x_start_top}\n")
+                    sys.stderr.write(f"x start bottom: {x_end_top}\n")
+
+            # Send to top neighbor (if not rank 0)
+            # rank - 1
+            if rank != 0:
+                if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                    if COMMUNICATION_DEBUG:
+                        sys.stderr.write(f"rank: {rank}, send to {rank - 1}, "
+                                         f"tag=77\n")
+                        sys.stderr.write(f"message size: "
+                                         f"{x_end_bottom - x_start_bottom}\n")
+
+                if rank == (nprocs - 1):
+                    comm.Send([x[x_start_bottom:x_end_bottom], MPI.DOUBLE],
+                               dest=(rank - 1), tag=77)
+                else:
+                    comm.Send([x[x_start_bottom:x_end_bottom], MPI.DOUBLE],
+                               dest=(rank - 1),
+                              tag=77)
+
+                # if rank == (nprocs - 1):
+                #     comm.Send([x[-n_local:], MPI.DOUBLE], dest=(rank - 1), tag=77)
+                # else:
+                #     comm.Send([x[n_local:-n_local], MPI.DOUBLE], dest=(rank - 1),
+                #               tag=77)
+
+            # Task: Send to bottom neighbor (if not last rank)
+            # rank + 1
+            if rank != (nprocs - 1):
+                if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                    if COMMUNICATION_DEBUG:
+                        sys.stderr.write(f"rank: {rank}, send to {rank + 1}, tag=78\n")
+                        sys.stderr.write(f"message size: "
+                                         f"{x_end_top - x_start_top}\n")
+
+                if rank == 0:
+                    comm.Send([x[x_start_top:x_end_top], MPI.DOUBLE],
+                              dest=(rank + 1),
+                              tag=78)
+                else:
+                    comm.Send([x[x_start_top:x_end_top], MPI.DOUBLE],
+                              dest=(rank + 1),
+                              tag=78)
+
+                # if rank == 0:
+                #     comm.Send([x[:n_local], MPI.DOUBLE], dest=(rank + 1), tag=78)
+                # else:
+                #     comm.Send([x[n_local:-n_local], MPI.DOUBLE], dest=(rank + 1),
+                #               tag=78)
+
+            # REMEMBER TO RECEIVE in a DIFFERENT PART of x
+            # Task: Receive from right neighbor (if not last rank)
+            # Task: receive from the top neighbor
+            # rank - 1
+            if rank != 0:
+                # if rank == (nprocs - 1):
+                #     comm.Recv([x[:n_local], MPI.DOUBLE], source=rank - 1, tag=77)
+                # else:
+                #     comm.Recv([x[:n_local], MPI.DOUBLE], source=rank - 1,
+                #               tag=77)
+
+                if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                    if COMMUNICATION_DEBUG:
+                        sys.stderr.write(f"rank: {rank}, receive from {rank - 1}, "
+                                         f"tag=78\n")
+
+                if rank == (nprocs - 1):
+                    if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                        if COMMUNICATION_DEBUG:
+                            sys.stderr.write(f"message size: "
+                                             f"{x_end_top - x_start_top}\n")
+
+                    comm.Recv([x[x_start_top:x_end_top], MPI.DOUBLE],
+                              source=(rank - 1),
+                              tag=78)
+                else:
+                    start_middle = start_correction
+                    end_middle = end_correction
+
+                    if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                        if COMMUNICATION_DEBUG:
+                            sys.stderr.write(f"message size: "
+                                             f"{end_middle - start_middle}\n")
+                            sys.stderr.write(f"start middle: "
+                                             f"{start_middle}\n")
+                            sys.stderr.write(f"end middle: "
+                                             f"{end_middle}\n")
+
+                    comm.Recv([x[start_middle:end_middle], MPI.DOUBLE],
+                              source=(rank - 1),
+                              tag=78)
+
+
+                # comm.Recv([x[:n_local], MPI.DOUBLE], source=(rank - 1), tag=78)
+
+            # Task: receive from the bottom neighbor
+            # rank + 1
+            if rank != (nprocs - 1):
+                # if rank == 0:
+                #     comm.Recv([x[-n_local:], MPI.DOUBLE], source=rank + 1, tag=77)
+                # else:
+                #     comm.Recv([x[-n_local:], MPI.DOUBLE], source=rank + 1,
+                #               tag=77)
+
+                if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                    if COMMUNICATION_DEBUG:
+                        sys.stderr.write(f"rank: {rank}, receive from {rank + 1}, "
+                                         f"tag=77\n")
+
+                if rank == 0:
+                    if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                        if COMMUNICATION_DEBUG:
+                            sys.stderr.write(f"message size: "
+                                             f"{x_end_bottom - x_start_bottom}\n")
+
+                    comm.Recv([x[x_start_bottom:x_end_bottom], MPI.DOUBLE],
+                              source=(rank + 1),
+                              tag=77)
+                else:
+                    start_middle = (-n_local) + start_correction
+                    end_middle = (-n_local) + end_correction
+
+                    if end_middle == 0:
+                        end_middle = 3 * n_local
+
+                    if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                        if COMMUNICATION_DEBUG:
+                            sys.stderr.write(f"message size: "
+                                             f"{end_middle - start_middle}\n")
+                            sys.stderr.write(f"start middle: "
+                                             f"{start_middle}\n")
+                            sys.stderr.write(f"end middle: "
+                                             f"{end_middle}\n")
+
+                    comm.Recv([x[start_middle:end_middle], MPI.DOUBLE],
+                              source=(rank + 1), tag=77)
+
+                # comm.Recv([x[-n_local:], MPI.DOUBLE], source=(rank + 1), tag=77)
+
+
 def neighbor_communication(x, n_local, comm):
     # communication only with more than 1 processes...
+    # auto typing with MPI -- remove MPI.DOUBLE...
 
     if JACOBI_DEBUG:
         if rank == 0:
@@ -365,24 +600,51 @@ def neighbor_communication(x, n_local, comm):
         sys.stderr.write(f"x: {x}\n")
         sys.stderr.write(f"x shape: {x.shape}\n")
 
+    if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+        if COMMUNICATION_DEBUG:
+            sys.stderr.write(f"rank: {rank}\n")
+            sys.stderr.write(f"size of x: {x.shape}\n")
+            sys.stderr.write(f"n_local: {n_local}\n")
+
     if nprocs > 1:
         # Send to top neighbor (if not rank 0)
         # rank - 1
         if rank != 0:
+            if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                if COMMUNICATION_DEBUG:
+                    sys.stderr.write(f"rank: {rank}, send to {rank - 1}, "
+                                     f"tag=77\n")
+
             if rank == (nprocs - 1):
-                comm.Send([x[-n_local:], MPI.DOUBLE], dest=rank - 1, tag=77)
+                comm.Send(x[-n_local:], dest=(rank - 1), tag=77)
             else:
-                comm.Send([x[n_local:-n_local], MPI.DOUBLE], dest=rank - 1,
+                comm.Send(x[n_local:-n_local], dest=(rank - 1),
                           tag=77)
+
+            # if rank == (nprocs - 1):
+            #     comm.Send([x[-n_local:], MPI.DOUBLE], dest=(rank - 1), tag=77)
+            # else:
+            #     comm.Send([x[n_local:-n_local], MPI.DOUBLE], dest=(rank - 1),
+            #               tag=77)
 
         # Task: Send to bottom neighbor (if not last rank)
         # rank + 1
         if rank != (nprocs - 1):
+            if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                if COMMUNICATION_DEBUG:
+                    sys.stderr.write(f"rank: {rank}, send to {rank + 1}, tag=78\n")
+
             if rank == 0:
-                comm.Send([x[:n_local], MPI.DOUBLE], dest=rank + 1, tag=77)
+                comm.Send(x[:n_local], dest=(rank + 1), tag=78)
             else:
-                comm.Send([x[n_local:-n_local], MPI.DOUBLE], dest=rank + 1,
-                          tag=77)
+                comm.Send(x[n_local:-n_local], dest=(rank + 1),
+                          tag=78)
+
+            # if rank == 0:
+            #     comm.Send([x[:n_local], MPI.DOUBLE], dest=(rank + 1), tag=78)
+            # else:
+            #     comm.Send([x[n_local:-n_local], MPI.DOUBLE], dest=(rank + 1),
+            #               tag=78)
 
         # REMEMBER TO RECEIVE in a DIFFERENT PART of x
         # Task: Receive from right neighbor (if not last rank)
@@ -395,7 +657,14 @@ def neighbor_communication(x, n_local, comm):
             #     comm.Recv([x[:n_local], MPI.DOUBLE], source=rank - 1,
             #               tag=77)
 
-            comm.Recv([x[:n_local], MPI.DOUBLE], source=rank - 1, tag=77)
+            if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                if COMMUNICATION_DEBUG:
+                    sys.stderr.write(f"rank: {rank}, receive from {rank - 1}, "
+                                     f"tag=78\n")
+
+            comm.Recv(x[:n_local], source=(rank - 1), tag=78)
+
+            # comm.Recv([x[:n_local], MPI.DOUBLE], source=(rank - 1), tag=78)
 
         # Task: receive from the bottom neighbor
         # rank + 1
@@ -406,7 +675,14 @@ def neighbor_communication(x, n_local, comm):
             #     comm.Recv([x[-n_local:], MPI.DOUBLE], source=rank + 1,
             #               tag=77)
 
-            comm.Recv([x[-n_local:], MPI.DOUBLE], source=rank + 1, tag=77)
+            if FIRST_TIME_STEP_CHECK or LAST_TIME_STEP_CHECK:
+                if COMMUNICATION_DEBUG:
+                    sys.stderr.write(f"rank: {rank}, receive from {rank + 1}, "
+                                     f"tag=77\n")
+
+            comm.Recv(x[-n_local:], source=(rank + 1), tag=77)
+
+            # comm.Recv([x[-n_local:], MPI.DOUBLE], source=(rank + 1), tag=77)
 
 
 def matrix_vector(A, x, n_local, comm):
@@ -420,7 +696,10 @@ def matrix_vector(A, x, n_local, comm):
     :return:
     """
 
-    neighbor_communication(x, n_local, comm)
+    if NEW_COMMUNICATION:
+        new_neighbor_communication(x, n_local, comm)
+    else:
+        neighbor_communication(x, n_local, comm)
 
     # (I - A*D_inv)*x
     # A is G in this case
@@ -454,7 +733,10 @@ def jacobi_step(A, x, b, D_inv, n_local, comm):
         if rank == 0:
             sys.stderr.write(f"before neighbor communication:\n")
 
-    neighbor_communication(x, n_local, comm)
+    if NEW_COMMUNICATION:
+        new_neighbor_communication(x, n_local, comm)
+    else:
+        neighbor_communication(x, n_local, comm)
 
     if JACOBI_DEBUG:
         if rank == 0:
@@ -586,6 +868,9 @@ def matvec_check(A, X, Y, N, comm, h):
 #
 # - The total number of spatial points is (N_values[k] + 2)^2
 
+# for IDE purposes
+MAINSEPARATOR = False
+
 if __name__ == "__main__":
     # Use these problem sizes for your error convergence studies
     # Nt_values = array([8, 8*4, 8*4*4, 8*4*4*4])
@@ -604,9 +889,10 @@ if __name__ == "__main__":
     # so, the number of processes to be used are 2, 4, 8, 16, 32, 64
     # scale T so that the ratio ht/h**2 stays around 4 for all four
     # cases
-    Nt_values = array([1024])  # 1024
-    N_values = array([512])  # 512
-    T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
+    # move up for easy editing...
+    # Nt_values = array([16])  # 1024
+    # N_values = array([100])  # 512
+    # T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
 
     # Nt_values = array([12 * (4 ** 3)])  # 8*4 -> 100
     # N_values = array([8 * (2 ** 3)])  # 16
@@ -1068,15 +1354,18 @@ if __name__ == "__main__":
                 # step -- u_global
                 if rank == 0:
                     if PLOT_TIME_STEP:
+                        ue_local[i][:] = uexact(t, X, Y)[:]
                         u_global[i][start_index:end_index] = u_local[i][
                                                          start_index:end_index]
                     else:
                         if i == (nt - 1):
+                            ue_local[i][:] = uexact(t, X, Y)[:]
                             u_global[i][start_index:end_index] = \
                                 u_local[i][start_index:end_index]
 
                     if i == (nt - 1):
                         if UE_GLOBAL_COMMUNICATE:
+                            ue_local[i][:] = uexact(t, X, Y)[:]
                             ue_global[i][start_index:end_index] = \
                                 uexact(t, X, Y)[:n_local_domain]
 

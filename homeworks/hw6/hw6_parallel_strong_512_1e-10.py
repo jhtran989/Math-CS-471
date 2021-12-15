@@ -13,10 +13,10 @@ import sys
 from time import time
 
 global_maxiter = 400  # 250 go through code and refactor
-global_tol = 1e-4  # 1e-10 1e-15 -- takes way to long for the strong scaling...
+global_tol = 1e-10  # 1e-10 1e-15 -- takes way to long for the strong scaling...
 
 Nt_values = array([1024])  # 1024
-N_values = array([256])  # 512
+N_values = array([512])  # 512
 T = 4.0 * (1 / (N_values[0] ** 2)) * Nt_values[0]  # 1/64
 
 # Strong scaling -- repeat each 5 times and take the smallest of the 5 times
