@@ -1,12 +1,12 @@
 B# README
 ## Math/CS 471
-### Homework 5
+### Homework 6
 #### Michael Sands, John Tran
 
 - The homework report is in the directory
-`hw5/report` and is called `homework5.pdf`.
-- The code for `hw5` is in the directory `hw5/code`
-- The output files are in the directory `hw5/code_output`  
+`hw6/report` and is called `homework6.pdf`.
+- The code for `hw6` is in the directory `hw6/code`
+- The output files are labled .output in thier respective directories  
 - To run the code, type the following command in the command line:
 
 ```
