@@ -1,0 +1,51 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1735151.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1735151.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler085 wheeler084 
+
+prologue running on host: wheeler085
+Agent pid 584
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 12647
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+tol: 0.0001
+number of processes: 16
+Nt values: [1024]
+N values: [128]
+T: 0.25
+b: [ 9.13524431e+00  5.06522544e+00  5.05771102e+00 ... -4.44980936e-03
+ -4.45642060e-03 -3.76633467e+00]
+x0: [ 0.99940703  0.99851788  0.99703654 ... -0.92257246 -0.92394316
+ -0.9247659 ]
+r0 vector: [-2.74854004e-06 -1.54900440e-06 -1.54670641e-06 ...  3.44846309e-07
+  3.45358662e-07  1.52150335e-06]
+r0 norm: 3.3040954323911096e-05
+n_local: 1024
+rk_vector: [-6.60804744e-13 -1.30473410e-12 -1.94066985e-12 ...  1.31703537e-11
+  8.90443275e-12  4.48885373e-12]
+rk norm: 3.296136318109567e-09
+Residual ratio: 9.975911366834273e-05
+First time step
+did converge, i = 141
+b: [ 6.45959510e+00  3.58165631e+00  3.57634282e+00 ... -2.64603498e-03
+ -2.64996628e-03 -2.66269992e+00]
+x0: [ 0.70722983  0.70660062  0.70555237 ... -0.65285823 -0.65382809
+ -0.65441019]
+r0 vector: [-0.00495739 -0.00274873 -0.00274465 ...  0.00053356  0.00053435
+  0.00269993]
+r0 norm: 0.05555536134234071
+n_local: 1024
+rk_vector: [-1.11091136e-09 -2.20521024e-09 -3.26019434e-09 ...  2.21180125e-08
+  1.49407759e-08  7.53723883e-09]
+rk norm: 5.443281622301437e-06
+Residual ratio: 9.797941172156357e-05
+Last time step
+did converge, i = 140
+timing 0: 126.79482936859131
+Nt, N, Error is:  1024,  128,  1.2218475270225476e-06
+/var/lib/torque/server_priv/accounting/20211214: No such file or directory
+/var/lib/torque/server_logs/20211214: No such file or directory
+/var/lib/torque/mom_logs/20211214: No matching job records located
+/var/lib/torque/sched_logs/20211214: No such file or directory
+Wheeler Portable Batch System Epilogue

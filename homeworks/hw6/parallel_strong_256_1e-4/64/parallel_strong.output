@@ -1,23 +1,23 @@
 Wheeler Portable Batch System Prologue
-Job Id: 1734297.wheeler-sn.alliance.unm.edu
+Job Id: 1734904.wheeler-sn.alliance.unm.edu
 Username: jtran989
-Job 1734297.wheeler-sn.alliance.unm.edu running on nodes:
-wheeler115 wheeler114 wheeler110 wheeler106 wheeler104 wheeler103 wheeler096 wheeler095 
+Job 1734904.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler158 wheeler156 wheeler150 wheeler148 wheeler147 wheeler145 wheeler143 wheeler138 
 
-prologue running on host: wheeler115
-Agent pid 17376
+prologue running on host: wheeler158
+Agent pid 26945
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-Agent pid 14188
-Agent pid 25685
-Agent pid 13949
-Agent pid 18346
+Agent pid 19125
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 28213
+Agent pid 27508
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-Agent pid 29112
+Agent pid 26252
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 19485
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
-Agent pid 7073
-Agent pid 3322
+Agent pid 2913
+Agent pid 3584
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
 Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
@@ -54,6 +54,10 @@ rk norm: 6.31334672396302e-07
 Residual ratio: 9.930518577421955e-05
 Last time step
 did converge, i = 145
-timing 0: 193.9949014186859
+timing 0: 198.48022556304932
 Nt, N, Error is:  1024,  256,  1.0856977109078056e-07
+/var/lib/torque/server_priv/accounting/20211214: No such file or directory
+/var/lib/torque/server_logs/20211214: No such file or directory
+/var/lib/torque/mom_logs/20211214: No matching job records located
+/var/lib/torque/sched_logs/20211214: No such file or directory
 Wheeler Portable Batch System Epilogue

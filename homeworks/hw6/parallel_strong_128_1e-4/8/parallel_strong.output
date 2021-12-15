@@ -1,0 +1,49 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1735150.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1735150.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler086 
+
+prologue running on host: wheeler086
+Agent pid 29267
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+tol: 0.0001
+number of processes: 8
+Nt values: [1024]
+N values: [128]
+T: 0.25
+b: [ 9.13524431e+00  5.06522544e+00  5.05771102e+00 ... -3.42210952e-03
+ -3.42719387e-03 -2.89648582e+00]
+x0: [ 0.99940703  0.99851788  0.99703654 ... -0.70950096 -0.71055509
+ -0.71118782]
+r0 vector: [-2.74854004e-06 -1.54900440e-06 -1.54670641e-06 ...  3.25148151e-07
+  3.25631236e-07  1.43459270e-06]
+r0 norm: 3.3040954323382405e-05
+n_local: 2048
+rk_vector: [-6.57252031e-13 -1.30739863e-12 -1.93356442e-12 ...  1.76360038e-11
+  1.19189103e-11  6.00586247e-12]
+rk norm: 3.296136500564675e-09
+Residual ratio: 9.975911919202851e-05
+First time step
+did converge, i = 141
+b: [ 6.45959510e+00  3.58165631e+00  3.57634282e+00 ... -2.03492347e-03
+ -2.03794682e-03 -2.04773958e+00]
+x0: [ 0.70722983  0.70660062  0.70555237 ... -0.50207837 -0.50282419
+ -0.5032718 ]
+r0 vector: [-0.00495739 -0.00274873 -0.00274465 ...  0.00050309  0.00050383
+  0.00254571]
+r0 norm: 0.05555536134234031
+n_local: 2048
+rk_vector: [-1.11091136e-09 -2.20521024e-09 -3.26019434e-09 ...  2.94425625e-08
+  1.98967444e-08  1.00340900e-08]
+rk norm: 5.443281621917896e-06
+Residual ratio: 9.797941171466051e-05
+Last time step
+did converge, i = 140
+timing 0: 57.57755088806152
+Nt, N, Error is:  1024,  128,  1.2218475270295458e-06
+/var/lib/torque/server_priv/accounting/20211214: No such file or directory
+/var/lib/torque/server_logs/20211214: No such file or directory
+/var/lib/torque/mom_logs/20211214: No matching job records located
+/var/lib/torque/sched_logs/20211214: No such file or directory
+Wheeler Portable Batch System Epilogue

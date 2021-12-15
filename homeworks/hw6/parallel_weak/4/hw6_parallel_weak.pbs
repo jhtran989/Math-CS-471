@@ -10,7 +10,8 @@
 
 
 ## This is the max run-time allowed  hr:min:sec
-#PBS -l walltime=00:30:00 
+## just set to 48, just in case for weak scaling
+#PBS -l walltime=48:00:00 
 
 ## The debug queue will likely be faster, but if your code takes more than 5 or
 ## 10 minutes, switch "debug" to "default"
@@ -78,8 +79,9 @@ cd $PBS_O_WORKDIR
 ########################################################################
 
 # ==> You will need to change the below filename to run your program
-# mpirun -machinefile $PBS_NODEFILE -np 1 --map-by node:PE=8 python ${HOMEWORK_FILENAME}
 mpirun -machinefile $PBS_NODEFILE -np 4 --map-by node:PE=8 python hw6_parallel_weak.py
+tracejob $PBS_JOBID
+# mpirun -machinefile $PBS_NODEFILE -np 1 --map-by node:PE=8 python ${HOMEWORK_FILENAME}
 
 
 
