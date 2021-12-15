@@ -1,0 +1,106 @@
+(base) [jtran989@wheeler-sn hw6]$ ./hw6_multiple_strong_scaling_script.sh 
+=============================================================================================
+Executing parallel algorithm to make the timings file for STRONG scaling for MULTIPLE cases
+number of processes: 2
+=============================================================================================
+1735454.wheeler-sn.alliance.unm.edu
+1735455.wheeler-sn.alliance.unm.edu
+1735457.wheeler-sn.alliance.unm.edu
+1735458.wheeler-sn.alliance.unm.edu
+1735459.wheeler-sn.alliance.unm.edu
+1735460.wheeler-sn.alliance.unm.edu
+1735461.wheeler-sn.alliance.unm.edu
+1735462.wheeler-sn.alliance.unm.edu
+=============================================================================================
+Executing parallel algorithm to make the timings file for STRONG scaling for MULTIPLE cases
+number of processes: 4
+=============================================================================================
+1735463.wheeler-sn.alliance.unm.edu
+1735464.wheeler-sn.alliance.unm.edu
+1735465.wheeler-sn.alliance.unm.edu
+1735466.wheeler-sn.alliance.unm.edu
+1735467.wheeler-sn.alliance.unm.edu
+1735468.wheeler-sn.alliance.unm.edu
+1735469.wheeler-sn.alliance.unm.edu
+1735470.wheeler-sn.alliance.unm.edu
+=============================================================================================
+Executing parallel algorithm to make the timings file for STRONG scaling for MULTIPLE cases
+number of processes: 8
+=============================================================================================
+1735471.wheeler-sn.alliance.unm.edu
+1735472.wheeler-sn.alliance.unm.edu
+1735473.wheeler-sn.alliance.unm.edu
+1735474.wheeler-sn.alliance.unm.edu
+1735475.wheeler-sn.alliance.unm.edu
+1735476.wheeler-sn.alliance.unm.edu
+1735477.wheeler-sn.alliance.unm.edu
+1735478.wheeler-sn.alliance.unm.edu
+=============================================================================================
+Executing parallel algorithm to make the timings file for STRONG scaling for MULTIPLE cases
+number of processes: 16
+=============================================================================================
+1735479.wheeler-sn.alliance.unm.edu
+1735480.wheeler-sn.alliance.unm.edu
+1735481.wheeler-sn.alliance.unm.edu
+1735482.wheeler-sn.alliance.unm.edu
+1735483.wheeler-sn.alliance.unm.edu
+1735484.wheeler-sn.alliance.unm.edu
+1735485.wheeler-sn.alliance.unm.edu
+1735486.wheeler-sn.alliance.unm.edu
+=============================================================================================
+Executing parallel algorithm to make the timings file for STRONG scaling for MULTIPLE cases
+number of processes: 32
+=============================================================================================
+1735487.wheeler-sn.alliance.unm.edu
+1735488.wheeler-sn.alliance.unm.edu
+1735489.wheeler-sn.alliance.unm.edu
+1735490.wheeler-sn.alliance.unm.edu
+1735491.wheeler-sn.alliance.unm.edu
+1735492.wheeler-sn.alliance.unm.edu
+1735493.wheeler-sn.alliance.unm.edu
+1735494.wheeler-sn.alliance.unm.edu
+=============================================================================================
+Executing parallel algorithm to make the timings file for STRONG scaling for MULTIPLE cases
+number of processes: 64
+=============================================================================================
+1735495.wheeler-sn.alliance.unm.edu
+1735496.wheeler-sn.alliance.unm.edu
+1735497.wheeler-sn.alliance.unm.edu
+1735498.wheeler-sn.alliance.unm.edu
+1735499.wheeler-sn.alliance.unm.edu
+1735500.wheeler-sn.alliance.unm.edu
+1735501.wheeler-sn.alliance.unm.edu
+1735502.wheeler-sn.alliance.unm.edu
+(base) [jtran989@wheeler-sn hw6]$ ./hw6_multiple_weak_scaling_script.sh 
+=============================================================================================
+Executing parallel algorithm to make the timings file for WEAK scaling for MULTIPLE cases
+number of processes: 1
+=============================================================================================
+1735503.wheeler-sn.alliance.unm.edu
+1735504.wheeler-sn.alliance.unm.edu
+1735505.wheeler-sn.alliance.unm.edu
+1735506.wheeler-sn.alliance.unm.edu
+=============================================================================================
+Executing parallel algorithm to make the timings file for WEAK scaling for MULTIPLE cases
+number of processes: 4
+=============================================================================================
+1735507.wheeler-sn.alliance.unm.edu
+1735508.wheeler-sn.alliance.unm.edu
+1735509.wheeler-sn.alliance.unm.edu
+1735510.wheeler-sn.alliance.unm.edu
+=============================================================================================
+Executing parallel algorithm to make the timings file for WEAK scaling for MULTIPLE cases
+number of processes: 16
+=============================================================================================
+1735511.wheeler-sn.alliance.unm.edu
+1735512.wheeler-sn.alliance.unm.edu
+1735513.wheeler-sn.alliance.unm.edu
+1735514.wheeler-sn.alliance.unm.edu
+=============================================================================================
+Executing parallel algorithm to make the timings file for WEAK scaling for MULTIPLE cases
+number of processes: 64
+=============================================================================================
+1735515.wheeler-sn.alliance.unm.edu
+1735516.wheeler-sn.alliance.unm.edu
+1735517.wheeler-sn.alliance.unm.edu
+1735518.wheeler-sn.alliance.unm.edu
