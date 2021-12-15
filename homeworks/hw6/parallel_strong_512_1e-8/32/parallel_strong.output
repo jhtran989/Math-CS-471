@@ -1,0 +1,43 @@
+Wheeler Portable Batch System Prologue
+Job Id: 1735492.wheeler-sn.alliance.unm.edu
+Username: jtran989
+Job 1735492.wheeler-sn.alliance.unm.edu running on nodes:
+wheeler018 wheeler017 wheeler016 wheeler015 
+
+prologue running on host: wheeler018
+Agent pid 1687
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 19597
+Agent pid 30254
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+Agent pid 4845
+Identity added: /users/jtran989/.ssh/true_id_rsa (/users/jtran989/.ssh/true_id_rsa)
+tol: 1e-08
+new communication (chunks with multiple messages): True
+chunk size: 400
+number of processes: 32
+Nt values: [1024]
+N values: [512]
+T: 0.015625
+n_local: 8192
+r0 norm: 3.9467084273281236e-07
+n_local: 8192
+rk norm: 7.120664270319696e-13
+Residual ratio: 1.804203275066941e-06
+First time step
+did NOT converge
+n_local: 8192
+r0 norm: 0.0007067016185793347
+n_local: 8192
+rk norm: 6.9881456665250885e-12
+Residual ratio: 9.888396294567982e-09
+Last time step
+did converge, i = 300
+timing 0: 3769.282151222229
+Nt, N, Error is:  1024,  512,  4.6594692901406476e-08
+/var/lib/torque/server_priv/accounting/20211214: No such file or directory
+/var/lib/torque/server_logs/20211214: No such file or directory
+/var/lib/torque/mom_logs/20211214: No matching job records located
+/var/lib/torque/sched_logs/20211214: No such file or directory
+Wheeler Portable Batch System Epilogue
